@@ -22,12 +22,12 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="tab-content" style="padding-top:20px">
-                    {{ tab_panel(lang.mailbox.mailboxes, "domains", "domain", "domain", 'addDomainModal', lang.mailbox.add_domain) }}
+                    {{ tab_panel(lang.mailbox.mailboxes, "domains", "domain", "domain", 'addDomainModal', lang.mailbox.add_domain, true) }}
                     {{ tab_panel(lang.mailbox.mailboxes, "mailboxes", "mailbox", "mailbox", 'addMailboxModal', lang.mailbox.add_mailbox) }}
                     {{ tab_panel(lang.mailbox.resources, "resources", "resource", "resource", 'addResourceModal', lang.mailbox.add_resource) }}
-                    {{ tab_panel(lang.mailbox.domain_aliases, "domain-aliases", "aliasdomain", "alias-domain", 'addAliasDomainModal', lang.mailbox.add_domain_alias, true) }}
+                    {{ tab_panel(lang.mailbox.domain_aliases, "domain-aliases", "aliasdomain", "alias-domain", 'addAliasDomainModal', lang.mailbox.add_domain_alias, false, true) }}
                     {{ tab_panel(lang.mailbox.aliases, "mbox-aliases", "alias", "alias", 'addAliasModal', lang.mailbox.add_alias) }}
-                    {{ tab_panel("Sync jobs", "syncjobs", "sync_job", "syncjob", 'addSyncJobModalAdmin', lang.mailbox.create_syncjob, false, lang.user.eas_reset) }}
+                    {{ tab_panel("Sync jobs", "syncjobs", "sync_job", "syncjob", 'addSyncJobModalAdmin', lang.mailbox.create_syncjob, false, false, lang.user.eas_reset) }}
                 </div> <!-- /col-md-12 -->
             </div> <!-- /row -->
         </div> <!-- /container -->
@@ -43,12 +43,12 @@
     <script src="js/footable.min.js"></script>
     <script src="js/mailbox.js"></script>
 {% endblock %}
-{% set firstPane = true %}
-{% macro tab_panel(title, tabId, tableId, dataId, addModal, addTitle, addExtra, deleteText) %}
+
+{% macro tab_panel(title, tabId, tableId, dataId, addModal, addTitle, firstPane, addExtra, deleteText) %}
     {# deleteText is optional #}
     {% set addExtra = addExtra|default(false) %}
 
-    <div role="tabpanel" class="tab-pane{% if firstPane %}  active{% set firstPane = false %}{% endif %}" id="tab-{{ tabId }}">
+    <div role="tabpanel" class="tab-pane{% if firstPane %} active{% endif %}" id="tab-{{ tabId }}">
         <div class="panel panel-default">
             <div class="panel-heading">
                 {% if addExtra %}
