@@ -35,7 +35,7 @@
 
 {% block footer_extra %}
     <script type='text/javascript'>
-        var lang = '{{ lang.mailbox|json_encode }}';
+        var lang = '{{ lang.mailbox|json_encode|raw }}';
         var csrf_token = '{{ session.CSRF.TOKEN }}';
         var role = '{% if session.mailcow_cc_role == "admin" %}admin{% else %}dashboard{% endif %}';
         var pagination_size = '{{ paginationSize }}';
