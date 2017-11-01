@@ -76,3 +76,19 @@ init_db_schema();
 if (isset($_SESSION['mailcow_cc_role'])) {
   set_acl();
 }
+
+// TWIG integration
+require_once '../vendor/autoload.php';
+$loader = new Twig_Loader_Filesystem('../templates');
+$twig = new Twig_Environment($loader, array(
+    'cache' => '../var/cache',
+));
+$twig = new Twig_Environment($loader);
+$twig->addGlobal("session", $_SESSION);
+$twig->addGlobal("availableLanguages", $AVAILABLE_LANGUAGES);
+$twig->addGlobal("lang", $lang);
+$twig->addGlobal("requestURI", $_SERVER['REQUEST_URI']);
+$twig->addGlobal("getRequest", $_GET);
+$twig->addGlobal("apps", $MAILCOW_APPS);
+$twig->addGlobal("appLinks", customize('get', 'app_links'));
+$twig->addGlobal("paginationSize", $PAGINATION_SIZE);

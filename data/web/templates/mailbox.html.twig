@@ -1,0 +1,81 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#tab-domains" aria-controls="tab-domains" role="tab" data-toggle="tab">{{ lang.mailbox.domains }}</a></li>
+            <li role="presentation"><a href="#tab-mailboxes" aria-controls="tab-mailboxes" role="tab" data-toggle="tab">{{ lang.mailbox.mailboxes }}</a></li>
+            <li role="presentation"><a href="#tab-resources" aria-controls="tab-resources" role="tab" data-toggle="tab">{{ lang.mailbox.resources }}</a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">{{ lang.mailbox. }}<?=$lang['mailbox']['aliases'];?>
+                    <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li role="presentation"><a href="#tab-mbox-aliases" aria-controls="tab-mbox-aliases" role="tab" data-toggle="tab">{{ lang.mailbox.aliases }}</a></li>
+                    <li role="presentation"><a href="#tab-domain-aliases" aria-controls="tab-domain-aliases" role="tab" data-toggle="tab">{{ lang.mailbox.domain_aliases }}</a></li>
+                </ul>
+            </li>
+            <li role="presentation"><a href="#tab-syncjobs" aria-controls="tab-resources" role="tab" data-toggle="tab">Sync jobs</a></li>
+        </ul>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="tab-content" style="padding-top:20px">
+                    {{ tab_panel(lang.mailbox.mailboxes, "domains", "domain", "domain", 'addDomainModal', lang.mailbox.add_domain) }}
+                    {{ tab_panel(lang.mailbox.mailboxes, "mailboxes", "mailbox", "mailbox", 'addMailboxModal', lang.mailbox.add_mailbox) }}
+                    {{ tab_panel(lang.mailbox.resources, "resources", "resource", "resource", 'addResourceModal', lang.mailbox.add_resource) }}
+                    {{ tab_panel(lang.mailbox.domain_aliases, "domain-aliases", "aliasdomain", "alias-domain", 'addAliasDomainModal', lang.mailbox.add_domain_alias, true) }}
+                    {{ tab_panel(lang.mailbox.aliases, "mbox-aliases", "alias", "alias", 'addAliasModal', lang.mailbox.add_alias) }}
+                    {{ tab_panel("Sync jobs", "syncjobs", "sync_job", "syncjob", 'addSyncJobModalAdmin', lang.mailbox.create_syncjob, false, lang.user.eas_reset) }}
+                </div> <!-- /col-md-12 -->
+            </div> <!-- /row -->
+        </div> <!-- /container -->
+{% endblock %}
+
+{% block footer_extra %}
+    <script type='text/javascript'>
+        var lang = '{{ lang.mailbox|json_encode }}';
+        var csrf_token = '{{ session.CSRF.TOKEN }}';
+        var role = '{% if session.mailcow_cc_role == "admin" %}admin{% else %}dashboard{% endif %}';
+        var pagination_size = '{{ paginationSize }}';
+    </script>
+    <script src="js/footable.min.js"></script>
+    <script src="js/mailbox.js"></script>
+{% endblock %}
+
+{% macro tab_panel(title, tabId, tableId, dataId, addModal, addTitle, addExtra, deleteText) %}
+    {# deleteText is optional #}
+    {% set addExtra = addExtra|default(false) %}
+
+    <div role="tabpanel" class="tab-pane" id="tab-{{ tabId }}">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                {% if addExtra %}
+                    <div class="pull-right">
+                        <a href="#" data-toggle="modal" data-target="#addModal" ><span class="glyphicon glyphicon-plus"></span></a>
+                    </div>
+                {% endif %}
+                <h3 class="panel-title">{{ title }}</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped" id="{{ tableId }}_table"></table>
+            </div>
+            <div class="mass-actions-mailbox">
+                <div class="btn-group">
+                    <a class="btn btn-sm btn-default" id="toggle_multi_select_all" data-id="{{ dataId }}" href="#"><span class="glyphicon glyphicon-check" aria-hidden="true"></span> {{ lang.mailbox.toggle_all }}</a>
+                    <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#">{{ lang.mailbox.quick_actions }} <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a id="edit_selected" data-id="{{ dataId }}" data-api-url='edit/{{ dataId }}' data-api-attr='{"active":"1"}' href="#">{{ lang.mailbox.activate }}</a></li>
+                        <li><a id="edit_selected" data-id="{{ dataId }}" data-api-url='edit/{{ dataId }}' data-api-attr='{"active":"0"}' href="#">{{ lang.mailbox.deactivate }}</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a id="delete_selected" {% if deleteText is defined %}data-text="{{ deleteText }}?"{% endif %} data-id="{{ dataId }}" data-api-url='delete/{{ dataId }}' href="#">{{ lang.mailbox.remove }}</a></li>
+                    </ul>
+                    <a class="btn btn-sm btn-success" href="#" data-toggle="modal" data-target="#{{ addModal }}"><span class="glyphicon glyphicon-plus"></span> {{ addTitle }}</a>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- /tab-content -->
+{% endmacro %}
+
+{# Make the macro available for use #}
+{% from _self import tab_panel %}
+
