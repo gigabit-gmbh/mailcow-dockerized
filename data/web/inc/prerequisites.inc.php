@@ -78,12 +78,14 @@ if (isset($_SESSION['mailcow_cc_role'])) {
 }
 
 // TWIG integration
-require_once '../vendor/autoload.php';
-$loader = new Twig_Loader_Filesystem('../templates');
+require_once 'vendor/autoload.php';
+$loader = new Twig_Loader_Filesystem('./templates');
 $twig = new Twig_Environment($loader, array(
-    'cache' => '../var/cache',
+    'cache' => './var/cache',
 ));
 $twig = new Twig_Environment($loader);
+$twig->addGlobal("default_theme", $DEFAULT_THEME);
+$twig->addGlobal("mainLogo", customize('get', 'main_logo'));
 $twig->addGlobal("session", $_SESSION);
 $twig->addGlobal("availableLanguages", $AVAILABLE_LANGUAGES);
 $twig->addGlobal("lang", $lang);

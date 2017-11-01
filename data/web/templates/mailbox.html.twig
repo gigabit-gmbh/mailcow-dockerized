@@ -1,12 +1,15 @@
 {% extends 'layout.html.twig' %}
 
+{# let´s use the tab panel macro #}
+{% from _self import tab_panel %}
+
 {% block content %}
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#tab-domains" aria-controls="tab-domains" role="tab" data-toggle="tab">{{ lang.mailbox.domains }}</a></li>
             <li role="presentation"><a href="#tab-mailboxes" aria-controls="tab-mailboxes" role="tab" data-toggle="tab">{{ lang.mailbox.mailboxes }}</a></li>
             <li role="presentation"><a href="#tab-resources" aria-controls="tab-resources" role="tab" data-toggle="tab">{{ lang.mailbox.resources }}</a></li>
             <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">{{ lang.mailbox. }}<?=$lang['mailbox']['aliases'];?>
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">{{ lang.mailbox.aliases }}
                     <span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     <li role="presentation"><a href="#tab-mbox-aliases" aria-controls="tab-mbox-aliases" role="tab" data-toggle="tab">{{ lang.mailbox.aliases }}</a></li>
@@ -76,6 +79,4 @@
     </div> <!-- /tab-content -->
 {% endmacro %}
 
-{# Make the macro available for use #}
-{% from _self import tab_panel %}
 
