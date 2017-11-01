@@ -43,12 +43,12 @@
     <script src="js/footable.min.js"></script>
     <script src="js/mailbox.js"></script>
 {% endblock %}
-
+{% set firstPane = true %}
 {% macro tab_panel(title, tabId, tableId, dataId, addModal, addTitle, addExtra, deleteText) %}
     {# deleteText is optional #}
     {% set addExtra = addExtra|default(false) %}
 
-    <div role="tabpanel" class="tab-pane" id="tab-{{ tabId }}">
+    <div role="tabpanel" class="tab-pane{% if firstPane %}  active{% set firstPane = false %}{% endif %}" id="tab-{{ tabId }}">
         <div class="panel panel-default">
             <div class="panel-heading">
                 {% if addExtra %}
