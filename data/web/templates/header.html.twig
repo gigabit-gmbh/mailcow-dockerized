@@ -87,9 +87,9 @@
                 </li>
                 {% endif %}
                 {% if (session.dual-login is not defined) and session.mailcow_cc_username is defined %}
-                    <li><a href="#" style="border-left: 1px solid #E7E7E7;" onclick="logout.submit()">{{ lang.header.logged_in_as_logout|format(session.mailcow_cc_username) }}</a></li>
+                    <li><a href="#" style="border-left: 1px solid #E7E7E7;" onclick="logout.submit()">{{ lang.header.logged_in_as_logout|format(session.mailcow_cc_username)|raw }}</a></li>
                 {% elseif session.dual-login is defined %}
-                    <li><a href="#" style="border-left: 1px solid #E7E7E7;" onclick="logout.submit()">{{ lang.header.logged_in_as_logout_dual|format(session.mailcow_cc_username, session.dual-login.username) }}</a></li>
+                    <li><a href="#" style="border-left: 1px solid #E7E7E7;" onclick="logout.submit()">{{ lang.header.logged_in_as_logout_dual|format(session.mailcow_cc_username, session.dual-login.username)|raw }}</a></li>
                 {% endif %}
             </ul>
         </div><!--/.nav-collapse -->
