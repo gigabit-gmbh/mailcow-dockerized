@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="/inc/languages.min.css">
 <link rel="stylesheet" href="/css/mailcow.css">
 <link rel="stylesheet" href="/css/animate.min.css">
+<link rel="stylesheet" href="/css/numberedtextarea.min.css">
 <?= (preg_match("/mailbox.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/mailbox.css">' : null; ?>
 <?= (preg_match("/admin.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/admin.css">' : null; ?>
 <?= (preg_match("/user.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/user.css">' : null; ?>
@@ -75,11 +76,6 @@
               if ($_SESSION['mailcow_cc_role'] == 'admin' || $_SESSION['mailcow_cc_role'] == 'domainadmin') {
               ?>
                 <li<?= (preg_match("/mailbox/i", $_SERVER['REQUEST_URI'])) ? ' class="active"' : ''; ?>><a href="/mailbox.php"><?= $lang['header']['mailboxes']; ?></a></li>
-              <?php
-              }
-              if ($_SESSION['mailcow_cc_role'] == 'admin') {
-              ?>
-                <li<?= (preg_match("/diagnostics/i", $_SERVER['REQUEST_URI'])) ? ' class="active"' : ''; ?>><a href="/diagnostics.php"><?= $lang['header']['diagnostics']; ?></a></li>
               <?php
               }
               if ($_SESSION['mailcow_cc_role'] != 'admin') {
