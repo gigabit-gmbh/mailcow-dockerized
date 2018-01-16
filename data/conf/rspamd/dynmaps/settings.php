@@ -17,7 +17,7 @@ $opt = [
 ];
 try {
   $pdo = new PDO($dsn, $database_user, $database_pass, $opt);
-  $stmt = $pdo->query("SELECT * FROM `filterconf`");
+  $stmt = $pdo->query("SELECT '1' FROM `filterconf`");
 }
 catch (PDOException $e) {
   echo 'settings { }';
@@ -157,7 +157,7 @@ while ($row = array_shift($rows)) {
 ?>
 	whitelist_<?=$username_sane;?> {
 <?php
-	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(`value`, '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
+	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(CONCAT('^', `value`, '$'), '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
 		WHERE `object`= :object
 			AND `option` = 'whitelist_from'");
 	$stmt->execute(array(':object' => $row['object']));
@@ -196,7 +196,7 @@ while ($row = array_shift($rows)) {
 	}
 	whitelist_header_<?=$username_sane;?> {
 <?php
-	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(`value`, '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
+	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(CONCAT('^', `value`, '$'), '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
 		WHERE `object`= :object
 			AND `option` = 'whitelist_from'");
 	$stmt->execute(array(':object' => $row['object']));
@@ -249,7 +249,7 @@ while ($row = array_shift($rows)) {
 ?>
 	blacklist_<?=$username_sane;?> {
 <?php
-	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(`value`, '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
+	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(CONCAT('^', `value`, '$'), '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
 		WHERE `object`= :object
 			AND `option` = 'blacklist_from'");
 	$stmt->execute(array(':object' => $row['object']));
@@ -288,7 +288,7 @@ while ($row = array_shift($rows)) {
 	}
 	blacklist_header_<?=$username_sane;?> {
 <?php
-	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(`value`, '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
+	$stmt = $pdo->prepare("SELECT GROUP_CONCAT(REPLACE(CONCAT('^', `value`, '$'), '*', '.*') SEPARATOR '|') AS `value` FROM `filterconf`
 		WHERE `object`= :object
 			AND `option` = 'blacklist_from'");
 	$stmt->execute(array(':object' => $row['object']));
