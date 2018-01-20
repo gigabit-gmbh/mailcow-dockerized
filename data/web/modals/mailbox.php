@@ -141,6 +141,13 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
 							</div>
 						</div>
 					</div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <div class="checkbox">
+                                <label><input type="checkbox" value="1" name="le_active" checked> Let´s encrypt Zertifikat erstellen</label>
+                            </div>
+                        </div>
+                    </div>
 					<div class="form-group">
 						<div class="col-sm-offset-2 col-sm-10">
               <button class="btn btn-default" id="add_item" data-id="add_domain" data-api-url='add/domain' data-api-attr='{}' href="#"><?=$lang['add']['add_domain_only'];?></button>

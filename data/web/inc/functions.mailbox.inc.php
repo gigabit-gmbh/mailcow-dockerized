@@ -350,6 +350,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             return false;
           }
           $active = intval($_data['active']);
+          $le_active = intval($_data['le_active']);
           $relay_all_recipients = intval($_data['relay_all_recipients']);
           $backupmx = intval($_data['backupmx']);
           ($relay_all_recipients == 1) ? $backupmx = '1' : null;
@@ -394,7 +395,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             return false;
           }
           try {
-            $stmt = $pdo->prepare("INSERT INTO `domain` (`domain`, `description`, `aliases`, `mailboxes`, `maxquota`, `quota`, `backupmx`, `active`, `relay_all_recipients`)
+            $stmt = $pdo->prepare("INSERT INTO `domain` (`domain`, `description`, `aliases`, `mailboxes`, `maxquota`, `quota`, `backupmx`, `active`, `le_active`, `relay_all_recipients`)
               VALUES (:domain, :description, :aliases, :mailboxes, :maxquota, :quota, :backupmx, :active, :relay_all_recipients)");
             $stmt->execute(array(
               ':domain' => $domain,
@@ -405,6 +406,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               ':quota' => $quota,
               ':backupmx' => $backupmx,
               ':active' => $active,
+              ':le_active' => $le_active,
               ':relay_all_recipients' => $relay_all_recipients
             ));
             try {
@@ -1776,6 +1778,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $is_now = mailbox('get', 'domain_details', $domain);
               if (!empty($is_now)) {
                 $active               = (isset($_data['active'])) ? intval($_data['active']) : $is_now['active_int'];
+                $le_active               = (isset($_data['le_active'])) ? intval($_data['le_active']) : $is_now['le_active_int'];
                 $backupmx             = (isset($_data['backupmx'])) ? intval($_data['backupmx']) : $is_now['backupmx_int'];
                 $relay_all_recipients = (isset($_data['relay_all_recipients'])) ? intval($_data['relay_all_recipients']) : $is_now['relay_all_recipients_int'];
                 $relayhost            = (isset($_data['relayhost'])) ? intval($_data['relayhost']) : $is_now['relayhost'];
@@ -1867,6 +1870,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
                 `relay_all_recipients` = :relay_all_recipients,
                 `backupmx` = :backupmx,
                 `active` = :active,
+                `le_active` = :le_active,
                 `quota` = :quota,
                 `maxquota` = :maxquota,
                 `relayhost` = :relayhost,
@@ -1878,6 +1882,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
                   ':relay_all_recipients' => $relay_all_recipients,
                   ':backupmx' => $backupmx,
                   ':active' => $active,
+                  ':le_active' => $le_active,
                   ':quota' => $quota,
                   ':maxquota' => $maxquota,
                   ':relayhost' => $relayhost,
@@ -2961,6 +2966,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
                 `relay_all_recipients` as `relay_all_recipients_int`,
                 `backupmx` as `backupmx_int`,
                 `active` as `active_int`,
+                `le_active` as `le_active_int`,
                 CASE `relay_all_recipients` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `relay_all_recipients`,
                 CASE `backupmx` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `backupmx`,
                 CASE `active` WHEN 1 THEN '".$lang['mailbox']['yes']."' ELSE '".$lang['mailbox']['no']."' END AS `active`
@@ -2997,6 +3003,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             $domaindata['backupmx_int'] = $row['backupmx_int'];
             $domaindata['active'] = $row['active'];
             $domaindata['active_int'] = $row['active_int'];
+            $domaindata['le_active_int'] = $row['le_active_int'];
             $domaindata['relay_all_recipients'] = $row['relay_all_recipients'];
             $domaindata['relay_all_recipients_int'] = $row['relay_all_recipients_int'];
             $stmt = $pdo->prepare("SELECT COUNT(*) AS `alias_count` FROM `alias`
