@@ -1778,7 +1778,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $is_now = mailbox('get', 'domain_details', $domain);
               if (!empty($is_now)) {
                 $active               = (isset($_data['active'])) ? intval($_data['active']) : $is_now['active_int'];
-                $le_active               = (isset($_data['le_active'])) ? intval($_data['le_active']) : $is_now['le_active_int'];
+                $le_active            = (isset($_data['le_active'])) ? intval($_data['le_active']) : $is_now['le_active_int'];
                 $backupmx             = (isset($_data['backupmx'])) ? intval($_data['backupmx']) : $is_now['backupmx_int'];
                 $relay_all_recipients = (isset($_data['relay_all_recipients'])) ? intval($_data['relay_all_recipients']) : $is_now['relay_all_recipients_int'];
                 $relayhost            = (isset($_data['relayhost'])) ? intval($_data['relayhost']) : $is_now['relayhost'];
