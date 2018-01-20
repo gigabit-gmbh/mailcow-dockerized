@@ -217,7 +217,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                   <div class="checkbox">
                       <label><input type="checkbox" value="1" name="active" <?=(isset($result['le_active_int']) && $result['le_active_int']=="1") ? "checked" : null;?> <?=($_SESSION['mailcow_cc_role'] == "admin") ? null : "disabled";?>> Let´s encrypt Zertifikat erstellen</label>
                   </div>
-              </div>git comm
+              </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
