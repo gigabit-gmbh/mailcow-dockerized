@@ -288,7 +288,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
           }
           try {
             $stmt = $pdo->prepare("INSERT INTO `imapsync` (`user2`, `exclude`, `delete1`, `delete2`, `maxage`, `subfolder2`, `host1`, `authmech1`, `user1`, `password1`, `mins_interval`, `port1`, `enc1`, `delete2duplicates`, `active`)
-              VALUES (:user2, :exclude, :maxage, :delete1, :delete2, :subfolder2, :host1, :authmech1, :user1, :password1, :mins_interval, :port1, :enc1, :delete2duplicates, :active)");
+              VALUES (:user2, :exclude, :delete1, :delete2, :maxage, :subfolder2, :host1, :authmech1, :user1, :password1, :mins_interval, :port1, :enc1, :delete2duplicates, :active)");
             $stmt->execute(array(
               ':user2' => $username,
               ':exclude' => $exclude,
@@ -706,6 +706,16 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $_SESSION['return'] = array(
                 'type' => 'danger',
                 'msg' => 'MySQL: '.$e
+              );
+              return false;
+            }
+            try {
+              $redis->hSet('DOMAIN_MAP', $alias_domain, 1);
+            }
+            catch (RedisException $e) {
+              $_SESSION['return'] = array(
+                'type' => 'danger',
+                'msg' => 'Redis: '.$e
               );
               return false;
             }
@@ -1298,6 +1308,20 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             if (isset($_data['tagged_mail_handler']) && $_data['tagged_mail_handler'] == "subject") {
               try {
                 $redis->hSet('RCPT_WANTS_SUBJECT_TAG', $username, 1);
+                $redis->hDel('RCPT_WANTS_SUBFOLDER_TAG', $username);
+              }
+              catch (RedisException $e) {
+                $_SESSION['return'] = array(
+                  'type' => 'danger',
+                  'msg' => 'Redis: '.$e
+                );
+                return false;
+              }
+            }
+            else if (isset($_data['tagged_mail_handler']) && $_data['tagged_mail_handler'] == "subfolder") {
+              try {
+                $redis->hSet('RCPT_WANTS_SUBFOLDER_TAG', $username, 1);
+                $redis->hDel('RCPT_WANTS_SUBJECT_TAG', $username);
               }
               catch (RedisException $e) {
                 $_SESSION['return'] = array(
@@ -1310,6 +1334,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             else {
               try {
                 $redis->hDel('RCPT_WANTS_SUBJECT_TAG', $username);
+                $redis->hDel('RCPT_WANTS_SUBFOLDER_TAG', $username);
               }
               catch (RedisException $e) {
                 $_SESSION['return'] = array(
@@ -2622,8 +2647,11 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
             if ($redis->hGet('RCPT_WANTS_SUBJECT_TAG', $_data)) {
               return "subject";
             }
-            else {
+            elseif ($redis->hGet('RCPT_WANTS_SUBFOLDER_TAG', $_data)) {
               return "subfolder";
+            }
+            else {
+              return "none";
             }
           }
           catch (RedisException $e) {
@@ -3511,6 +3539,16 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $_SESSION['return'] = array(
                 'type' => 'danger',
                 'msg' => 'MySQL: '.$e
+              );
+              return false;
+            }
+            try {
+              $redis->hDel('DOMAIN_MAP', $alias_domain);
+            }
+            catch (RedisException $e) {
+              $_SESSION['return'] = array(
+                'type' => 'danger',
+                'msg' => 'Redis: '.$e
               );
               return false;
             }

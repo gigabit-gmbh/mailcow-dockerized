@@ -144,9 +144,9 @@ $lang['user']['weeks'] = 'Weeks';
 $lang['user']['spamfilter'] = 'Spam filter';
 $lang['admin']['spamfilter'] = 'Spam filter';
 $lang['user']['spamfilter_wl'] = 'Whitelist';
-$lang['user']['spamfilter_wl_desc'] = 'Whitelisted email addresses to <b>never</b> classify as spam. Wildcards may be used.';
+$lang['user']['spamfilter_wl_desc'] = 'Whitelisted email addresses to <b>never</b> classify as spam. Wildcards may be used. A filter is only applied to direct aliases (aliases with a single target mailbox) exclulding catch-all aliases and a mailbox itself.';
 $lang['user']['spamfilter_bl'] = 'Blacklist';
-$lang['user']['spamfilter_bl_desc'] = 'Blacklisted email addresses to <b>always</b> classify as spam and reject. Wildcards may be used.';
+$lang['user']['spamfilter_bl_desc'] = 'Blacklisted email addresses to <b>always</b> classify as spam and reject. Wildcards may be used. A filter is only applied to direct aliases (aliases with a single target mailbox) exclulding catch-all aliases and a mailbox itself.';
 $lang['user']['spamfilter_behavior'] = 'Rating';
 $lang['user']['spamfilter_table_rule'] = 'Rule';
 $lang['user']['spamfilter_table_action'] = 'Action';
@@ -175,6 +175,7 @@ $lang['user']['misc_delete_profile'] = 'Other profile settings';
 $lang['user']['tag_handling'] = 'Set handling for tagged mail';
 $lang['user']['tag_in_subfolder'] = 'In subfolder';
 $lang['user']['tag_in_subject'] = 'In subject';
+$lang['user']['tag_in_none'] = 'Do nothing';
 $lang['user']['tag_help_explain'] = 'In subfolder: a new subfolder named after the tag will be created below INBOX ("INBOX/Facebook").<br>
 In subject: the tags name will be prepended to the mails subject, example: "[Facebook] My News".';
 $lang['user']['tag_help_example'] = 'Example for a tagged email address: me<b>+Facebook</b>@example.org';
@@ -564,13 +565,14 @@ $lang['admin']['api_key'] = "API key";
 $lang['admin']['activate_api'] = "Activate API";
 $lang['admin']['regen_api_key'] = "Regenerate API key";
 
-$lang['admin']['quarantine'] = "Quarantine";
+$lang['admin']['quarantine'] = "Quarantaine";
 $lang['admin']['quarantine_retention_size'] = "Retentions per mailbox:";
 $lang['admin']['quarantine_max_size'] = "Maximum size in MiB (larger elements are discarded):";
 $lang['admin']['quarantine_exclude_domains'] = "Exclude domains and alias-domains:";
 
 $lang['admin']['ui_texts'] = "UI labels and texts";
 $lang['admin']['help_text'] = "Override help text below login mask (HTML allowed)";
+$lang['admin']['title_name'] = '"mailcow UI" website title';
 $lang['admin']['main_name'] = '"mailcow UI" name';
 $lang['admin']['apps_name'] = '"mailcow Apps" name';
 
@@ -624,6 +626,7 @@ $lang['quarantaine']['check_hash'] = "Search file hash @ VT";
 $lang['quarantaine']['qitem'] = "Quarantaine item";
 $lang['quarantaine']['subj'] = "Subject";
 $lang['quarantaine']['text_plain_content'] = "Content (text/plain)";
+$lang['quarantaine']['text_from_html_content'] = "Content (converted html)";
 $lang['quarantaine']['atts'] = "Attachments";
 
 $lang['header']['quarantaine'] = "Quarantaine";

@@ -40,7 +40,7 @@ $tfa_data = get_tfa();
           </div>
           <div class="form-group">
             <div class="col-sm-offset-3 col-sm-9">
-              <button class="btn btn-default" id="edit_selected" data-id="admin" data-item="null" data-api-url='edit/self' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+              <button class="btn btn-default" id="edit_selected" data-id="admin" data-item="admin" data-api-url='edit/self' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
             </div>
           </div>
         </form>
@@ -511,6 +511,10 @@ $tfa_data = get_tfa();
         ?>
         <form class="form" data-id="uitexts" role="form" method="post">
           <div class="form-group">
+            <label for="title_name"><?=$lang['admin']['title_name'];?>:</label>
+            <input type="text" class="form-control" id="title_name" name="title_name" placeholder="mailcow UI" value="<?=$ui_texts['title_name'];?>">
+          </div>
+          <div class="form-group">
             <label for="main_name"><?=$lang['admin']['main_name'];?>:</label>
             <input type="text" class="form-control" id="main_name" name="main_name" placeholder="mailcow UI" value="<?=$ui_texts['main_name'];?>">
           </div>
@@ -522,7 +526,7 @@ $tfa_data = get_tfa();
             <label for="help_text"><?=$lang['admin']['help_text'];?>:</label>
             <textarea class="form-control" id="help_text" name="help_text" rows="7"><?=$ui_texts['help_text'];?></textarea>
           </div>
-          <button class="btn btn-success" id="edit_selected" data-item="null" data-id="uitexts" data-api-url='edit/ui_texts' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+          <button class="btn btn-success" id="edit_selected" data-item="ui" data-id="uitexts" data-api-url='edit/ui_texts' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
         </form>
       </div>
     </div>

@@ -216,10 +216,18 @@ function quarantaine($_action, $_data = null) {
             $q_meta[] = $row;
           }
         }
+        elseif ($_SESSION['mailcow_cc_role'] == "admin") {
+          $stmt = $pdo->query('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantaine`');
+          $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+          while($row = array_shift($rows)) {
+            $q_meta[] = $row;
+          }
+        }
         else {
-          foreach (mailbox('get', 'mailboxes') as $mbox) {
-            $stmt = $pdo->prepare('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantaine` WHERE `rcpt` = :mbox');
-            $stmt->execute(array(':mbox' => $mbox));
+          $domains = array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains'));
+          foreach ($domains as $domain) {
+            $stmt = $pdo->prepare('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantaine` WHERE `rcpt` REGEXP :domain');
+            $stmt->execute(array(':domain' => '@' . $domain . '$'));
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             while($row = array_shift($rows)) {
               $q_meta[] = $row;

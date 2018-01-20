@@ -103,7 +103,7 @@ $MAILCOW_APPS = array(
 );
 
 // Rows until pagination begins
-$PAGINATION_SIZE = 10;
+$PAGINATION_SIZE = 20;
 
 // Default number of rows/lines to display (log table)
 $LOG_LINES = 100;
@@ -119,10 +119,3 @@ $OTP_LABEL = "mailcow UI";
 
 // Default "to" address in relay test tool
 $RELAY_TO = "null@hosted.mailcow.de";
-
-// Quarantaine data age in days to keep
-$QUARANTAINE_AGE = 10;
-
-// Page Title
-$PAGE_TITLE = "mailcow UI";
-

@@ -144,9 +144,9 @@ $lang['user']['weeks'] = 'Wochen';
 $lang['user']['spamfilter'] = 'Spamfilter';
 $lang['admin']['spamfilter'] = 'Spamfilter';
 $lang['user']['spamfilter_wl'] = 'Whitelist';
-$lang['user']['spamfilter_wl_desc'] = 'Für E-Mail-Adressen, die vom Spamfilter <b>nicht</b> erfasst werden sollen. Die Verwendung von Wildcards ist gestattet.';
+$lang['user']['spamfilter_wl_desc'] = 'Für E-Mail-Adressen, die vom Spamfilter <b>nicht</b> erfasst werden sollen. Die Verwendung von Wildcards ist gestattet. Ein Filter funktioniert lediglich für direkte nicht-"Catch All" Alias-Adressen (Alias-Adressen mit lediglich einer Mailbox als Ziel-Adresse) sowie die Mailbox-Adresse selbst.';
 $lang['user']['spamfilter_bl'] = 'Blacklist';
-$lang['user']['spamfilter_bl_desc'] = 'Für E-Mail-Adressen, die vom Spamfilter <b>immer</b> als Spam erfasst und abgelehnt werden. Die Verwendung von Wildcards ist gestattet.';
+$lang['user']['spamfilter_bl_desc'] = 'Für E-Mail-Adressen, die vom Spamfilter <b>immer</b> als Spam erfasst und abgelehnt werden. Die Verwendung von Wildcards ist gestattet. Ein Filter funktioniert lediglich für direkte nicht-"Catch All" Alias-Adressen (Alias-Adressen mit lediglich einer Mailbox als Ziel-Adresse) sowie die Mailbox-Adresse selbst.';
 $lang['user']['spamfilter_table_rule'] = 'Regel';
 $lang['user']['spamfilter_table_action'] = 'Aktion';
 $lang['user']['spamfilter_table_empty'] = 'Keine Einträge vorhanden';
@@ -176,6 +176,7 @@ $lang['user']['misc_delete_profile'] = 'Sonstige Kontoeinstellungen';
 $lang['user']['tag_handling'] = 'Umgang mit getaggten E-Mails steuern';
 $lang['user']['tag_in_subfolder'] = 'In Unterordner';
 $lang['user']['tag_in_subject'] = 'In Betreff';
+$lang['user']['tag_in_none'] = 'Nichts tun';
 $lang['user']['tag_help_explain'] = 'Als Unterordner: Es wird ein Ordner mit dem Namen des Tags unterhalb der Inbox erstellt ("INBOX/Facebook").<br>
 In Betreff: Der Name des Tags wird dem Betreff angefügt, etwa "[Facebook] Meine Neuigkeiten".';
 $lang['user']['tag_help_example'] = 'Beispiel für eine getaggte E-Mail-Adresse: ich<b>+Facebook</b>@example.org';
@@ -579,6 +580,7 @@ $lang['mailbox']['running'] = "In Ausführung";
 
 $lang['admin']['ui_texts'] = "UI Label und Texte";
 $lang['admin']['help_text'] = "Hilfstext unter Login-Maske (HTML zulässig)";
+$lang['admin']['title_name'] = '"mailcow UI" Webseiten Titel';
 $lang['admin']['main_name'] = '"mailcow UI" Name';
 $lang['admin']['apps_name'] = '"mailcow Apps" Name';
 
@@ -629,6 +631,7 @@ $lang['quarantaine']['check_hash'] = "Checksumme auf VirusTotal suchen";
 $lang['quarantaine']['qitem'] = "Quarantäneeintrag";
 $lang['quarantaine']['subj'] = "Betreff";
 $lang['quarantaine']['text_plain_content'] = "Inhalt (text/plain)";
+$lang['quarantaine']['text_from_html_content'] = "Inhalt (html, konvertiert)";
 $lang['quarantaine']['atts'] = "Anhänge";
 
 $lang['header']['quarantaine'] = "Quarantäne";
