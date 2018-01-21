@@ -413,7 +413,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $redis->hSet('DOMAIN_MAP', $domain, 1);
             }
             catch (RedisException $e) {
-              $_SESSION['return'] = array( :active,
+              $_SESSION['return'] = array(
                 'type' => 'danger',
                 'msg' => 'Redis: '.$e
               );
