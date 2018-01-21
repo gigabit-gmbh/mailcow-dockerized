@@ -396,7 +396,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
           }
           try {
             $stmt = $pdo->prepare("INSERT INTO `domain` (`domain`, `description`, `aliases`, `mailboxes`, `maxquota`, `quota`, `backupmx`, `active`, `le_active`, `relay_all_recipients`)
-              VALUES (:domain, :description, :aliases, :mailboxes, :maxquota, :quota, :backupmx, :active, :relay_all_recipients)");
+              VALUES (:domain, :description, :aliases, :mailboxes, :maxquota, :quota, :backupmx, :active, :le_active, :relay_all_recipients)");
             $stmt->execute(array(
               ':domain' => $domain,
               ':description' => $description,
@@ -413,7 +413,7 @@ function mailbox($_action, $_type, $_data = null, $attr = null) {
               $redis->hSet('DOMAIN_MAP', $domain, 1);
             }
             catch (RedisException $e) {
-              $_SESSION['return'] = array(
+              $_SESSION['return'] = array( :active,
                 'type' => 'danger',
                 'msg' => 'Redis: '.$e
               );
