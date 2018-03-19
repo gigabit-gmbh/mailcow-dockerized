@@ -46,7 +46,6 @@ COPY theme-blue.js /usr/lib/GNUstep/SOGo/WebServerResources/js/theme-blue.js
 COPY theme-green.js /usr/lib/GNUstep/SOGo/WebServerResources/js/theme-green.js
 COPY theme-gigabit.js /usr/lib/GNUstep/SOGo/WebServerResources/js/theme-gigabit.js
 COPY sogo-full.svg /usr/lib/GNUstep/SOGo/WebServerResources/img/sogo-full.svg
-#COPY gigabit-hallmark.svg /usr/lib/GNUstep/SOGo/WebServerResources/img/sogo-full.svg
 
 CMD exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
