@@ -15,43 +15,43 @@
     /**
      * Define the Alternative theme
      */
-    $mdThemingProvider.theme('mailcow')
-      .primaryPalette('green', {
-        'default': '600',  // top toolbar
-        'hue-1': '200',
+    $mdThemingProvider.theme('gigabit')
+      .primaryPalette('grey', {
+        'default': '900',  // top toolbar
+        'hue-1': '400',
         'hue-2': '600',    // sidebar toolbar
         'hue-3': 'A700'
       })
-      .accentPalette('green', {
-        'default': '600',  // fab buttons
+      .accentPalette('grey', {
+        'default': '900',  // fab buttons
         'hue-1': '50',     // center list toolbar
         'hue-2': '400',
         'hue-3': 'A700'
       })
       .backgroundPalette('grey', {
         'default': '50',   // center list background
-        'hue-1': '50',
-        'hue-2': '100',
-        'hue-3': '100'
+        'hue-1': '100',
+        'hue-2': '200',
+        'hue-3': '300'
       });
     $mdThemingProvider.theme('default')
-      .primaryPalette('green', {
-        'default': '600',  // top toolbar
-        'hue-1': '200',
+      .primaryPalette('grey', {
+        'default': '900',  // top toolbar
+        'hue-1': '400',
         'hue-2': '600',    // sidebar toolbar
         'hue-3': 'A700'
       })
-      .accentPalette('green', {
-        'default': '600',  // fab buttons
+      .accentPalette('grey', {
+        'default': '900',  // fab buttons
         'hue-1': '50',     // center list toolbar
         'hue-2': '400',
         'hue-3': 'A700'
       })
       .backgroundPalette('grey', {
         'default': '50',   // center list background
-        'hue-1': '50',
-        'hue-2': '100',
-        'hue-3': '100'
+        'hue-1': '100',
+        'hue-2': '200',
+        'hue-3': '300'
       });
 
     $mdThemingProvider.setDefaultTheme('mailcow');
