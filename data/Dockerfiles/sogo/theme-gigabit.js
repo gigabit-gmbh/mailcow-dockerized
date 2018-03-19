@@ -42,7 +42,7 @@
         'hue-3': 'A700'
       })
       .accentPalette('grey', {
-        'default': '900',  // fab buttons
+        'default': '500',  // fab buttons
         'hue-1': '50',     // center list toolbar
         'hue-2': '400',
         'hue-3': 'A700'
