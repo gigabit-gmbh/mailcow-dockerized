@@ -89,7 +89,7 @@ elif [[ ${NC_INSTALL} == "y" ]]; then
 	  /web/nextcloud/occ config:system:set memcache.locking --value='\OC\Memcache\Redis' --type=string; \
 	  /web/nextcloud/occ config:system:set memcache.local --value='\OC\Memcache\Redis' --type=string; \
 	  /web/nextcloud/occ config:system:set trusted_domains 1 --value=${MAILCOW_HOSTNAME}; \
-    /web/nextcloud/occ config:system:set trusted_proxies 0 --value=${IPV6_NETWORK}; \
+	  /web/nextcloud/occ config:system:set trusted_proxies 0 --value=${IPV6_NETWORK}; \
 	  /web/nextcloud/occ config:system:set trusted_proxies 1 --value=${IPV4_NETWORK}.0/24; \
 	  /web/nextcloud/occ config:system:set overwritewebroot --value=/nextcloud; \
 	  /web/nextcloud/occ config:system:set overwritehost --value=${MAILCOW_HOSTNAME}; \

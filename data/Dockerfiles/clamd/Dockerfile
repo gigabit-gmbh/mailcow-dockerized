@@ -35,9 +35,9 @@ RUN apk add --no-cache --virtual build-dependencies alpine-sdk ncurses-dev zlib-
   && adduser -S -D -h /var/lib/clamav -s /sbin/nologin -G clamav -g clamav clamav \
   && mkdir -p /run/clamav \
   && chown clamav:clamav /run/clamav \
-	&& chmod +x /dl_files.sh \
-	&& set -ex; /bin/bash /dl_files.sh \
-	&& chmod 750 /run/clamav
+  && chmod +x /dl_files.sh \
+  && set -ex; /bin/bash /dl_files.sh \
+  && chmod 750 /run/clamav
 
 # Port provision
 EXPOSE 3310
