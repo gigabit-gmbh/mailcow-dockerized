@@ -86,6 +86,7 @@ elif [[ ${NC_INSTALL} == "y" ]]; then
 
 	docker exec -it -u www-data $(docker ps -f name=php-fpm-mailcow -q) bash -c "/web/nextcloud/occ config:system:set redis host --value=redis --type=string; \
 	  /web/nextcloud/occ config:system:set redis port --value=6379 --type=integer; \
+          /web/nextcloud/occ config:system:set redis timeout --value=0.0 --type=integer; \
 	  /web/nextcloud/occ config:system:set memcache.locking --value='\OC\Memcache\Redis' --type=string; \
 	  /web/nextcloud/occ config:system:set memcache.local --value='\OC\Memcache\Redis' --type=string; \
 	  /web/nextcloud/occ config:system:set trusted_domains 1 --value=${MAILCOW_HOSTNAME}; \
