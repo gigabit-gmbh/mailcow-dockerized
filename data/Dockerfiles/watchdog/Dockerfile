@@ -23,8 +23,8 @@ RUN apk add --update \
   perl-mime-lite \
   perl-term-readkey \
   tini \
-	&& curl https://raw.githubusercontent.com/mludvig/smtp-cli/v3.8/smtp-cli -o /smtp-cli \
-	&& chmod +x smtp-cli
+  && curl https://raw.githubusercontent.com/mludvig/smtp-cli/v3.9/smtp-cli -o /smtp-cli \
+  && chmod +x smtp-cli
 
 COPY watchdog.sh /watchdog.sh
 
