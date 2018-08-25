@@ -105,6 +105,9 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
         </div>
       </div>
     </div>
+    <div class="col-md-offset-3 col-md-6">
+      <small><a href="https://www.gigabit.de/impressum.html">Impressum</a>&nbsp;<a href="https://www.gigabit.de/datenschutz.html">Datenschutz</a></small>
+    </div>
   </div>
 </div><!-- /.container -->
 <script src="js/index.js"></script>
