@@ -1,5 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/modals/footer.php';
+logger();
 ?>
 <div style="margin-bottom: 100px;"></div>
 <script src="/js/bootstrap.min.js"></script>
@@ -9,6 +10,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/modals/footer.php';
 <script src="/js/bootstrap-filestyle.min.js"></script>
 <script src="/js/notifications.min.js"></script>
 <script src="/js/formcache.min.js"></script>
+<script src="/js/google.charts.loader.js"></script>
 <script src="/js/numberedtextarea.min.js"></script>
 <script src="/js/u2f-api.js"></script>
 <script src="/js/api.js"></script>
@@ -27,7 +29,7 @@ $(window).load(function() {
 });
 $(document).ready(function() {
   window.mailcow_alert_box = function(message, type) {
-    msg = $('<span/>').html(message).text();
+    msg = $('<span/>').text(message).text();
     if (type == 'danger') {
       auto_hide = 0;
       $('#' + localStorage.getItem("add_modal")).modal('show');
@@ -35,17 +37,20 @@ $(document).ready(function() {
     } else {
       auto_hide = 5000;
     }
-    $.ajax({
-      url: '/inc/ajax/log_driver.php',
-      data: {"type": type,"msg": msg},
-      type: "GET"
-    });
     $.notify({message: msg},{z_index: 20000, delay: auto_hide, type: type,placement: {from: "bottom",align: "right"},animate: {enter: 'animated fadeInUp',exit: 'animated fadeOutDown'}});
   }
+  <?php
+  $alertbox_log_parser = alertbox_log_parser($_SESSION);
+  if (is_array($alertbox_log_parser)) {
+    foreach($alertbox_log_parser as $log) {
+  ?>
+  mailcow_alert_box(<?=$log['msg'];?>, <?=$log['type'];?>);
+  <?php
+    }
+  unset($_SESSION['return']);
+  }
+  ?>
   $('[data-cached-form="true"]').formcache({key: $(this).data('id')});
-  <?php if (isset($_SESSION['return'])): ?>
-  mailcow_alert_box(<?=json_encode($_SESSION['return']['msg']); ?>,  "<?= $_SESSION['return']['type']; ?>");
-  <?php endif; unset($_SESSION['return']); ?>
   // Confirm TFA modal
   <?php if (isset($_SESSION['pending_tfa_method'])):?>
   $('#ConfirmTFAModal').modal({
@@ -150,6 +155,9 @@ $(document).ready(function() {
     'use strict';
     if ($('a[data-toggle="tab"]').length) {
       $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if ($(this).data('dont-remember') == 1) {
+          return true;
+        }
         var id = $(this).parents('[role="tablist"]').attr('id');
         var key = 'lastTag';
         if (id) {
@@ -198,27 +206,29 @@ $(document).ready(function() {
     $('#triggerRestartContainer').click(function(){
       $(this).prop("disabled",true);
       $(this).html('<span class="glyphicon glyphicon-refresh glyphicon-spin"></span> ');
-      $('#statusTriggerRestartContainer').text('Restarting container, this may take a while... ');
-      $('#statusTriggerRestartContainer2').text('Reloading webpage... ');
+      $('#statusTriggerRestartContainer').html('<?= $lang['footer']['restarting_container']; ?>');
       $.ajax({
         method: 'get',
         url: '/inc/ajax/container_ctrl.php',
-        timeout: 10000,
+        timeout: <?= $DOCKER_TIMEOUT * 1000; ?>,
         data: {
-          'service': container,
-          'action': 'restart'
-        },
-        error: function() {
-          window.location = window.location.href.split("#")[0];
-        },
-        success: function(data) {
-          $('#statusTriggerRestartContainer').append(data);
-          $('#triggerRestartContainer').html('<span class="glyphicon glyphicon-ok"></span> ');
-          $('#statusTriggerRestartContainer2').append(data);
-          $('#triggerRestartContainer').html('<span class="glyphicon glyphicon-ok"></span> ');
-          window.location = window.location.href.split("#")[0];
+        'service': container,
+        'action': 'restart'
         }
-      });
+      })
+      .always( function (data, status) {
+        $('#statusTriggerRestartContainer').append(data);
+        var htmlResponse = $.parseHTML(data)
+        if ($(htmlResponse).find('span').hasClass('text-success')) {
+          $('#triggerRestartContainer').html('<span class="glyphicon glyphicon-ok"></span> ');
+          setTimeout(function(){
+            $('#RestartContainer').modal('toggle'); 
+            window.location = window.location.href.split("#")[0];
+          }, 1200);
+        } else {
+          $('#triggerRestartContainer').html('<span class="glyphicon glyphicon-remove"></span> ');
+        }
+      })
     });
   })
 

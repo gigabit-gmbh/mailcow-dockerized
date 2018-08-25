@@ -29,11 +29,23 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <form class="form-horizontal" data-id="editalias" role="form" method="post">
               <input type="hidden" value="0" name="active">
               <div class="form-group">
+                <label class="control-label col-sm-2" for="address"><?=$lang['edit']['alias'];?></label>
+                <div class="col-sm-10">
+                  <input class="form-control" type="text" name="address" value="<?=htmlspecialchars($result['address']);?>" />
+                </div>
+              </div>
+              <div class="form-group">
                 <label class="control-label col-sm-2" for="goto"><?=$lang['edit']['target_address'];?></label>
                 <div class="col-sm-10">
-                  <textarea id="textarea_alias_goto" class="form-control" autocapitalize="none" autocorrect="off" rows="10" id="goto" name="goto" required><?= ($result['goto'] != "null@localhost") ? htmlspecialchars($result['goto']) : null; ?></textarea>
+                  <textarea id="textarea_alias_goto" class="form-control" autocapitalize="none" autocorrect="off" rows="10" id="goto" name="goto" required><?= (!preg_match('/^(null|ham|spam)@localhost$/i', $result['goto'])) ? htmlspecialchars($result['goto']) : null; ?></textarea>
                   <div class="checkbox">
-                    <label><input id="goto_null" type="checkbox" value="1" name="goto_null" <?= ($result['goto'] == "null@localhost") ? "checked" : null; ?>> <?=$lang['add']['goto_null'];?></label>
+                    <label><input class="goto_checkbox"id="goto_null" type="checkbox" value="1" name="goto_null" <?= ($result['goto'] == "null@localhost") ? "checked" : null; ?>> <?=$lang['add']['goto_null'];?></label>
+                  </div>
+                  <div class="checkbox">
+                    <label><input class="goto_checkbox" id="goto_spam" type="checkbox" value="1" name="goto_spam" <?= ($result['goto'] == "spam@localhost") ? "checked" : null; ?>> <?=$lang['add']['goto_spam'];?></label>
+                  </div>
+                  <div class="checkbox">
+                    <label><input class="goto_checkbox" id="goto_ham" type="checkbox" value="1" name="goto_ham" <?= ($result['goto'] == "ham@localhost") ? "checked" : null; ?>> <?=$lang['add']['goto_ham'];?></label>
                   </div>
                 </div>
               </div>
@@ -80,7 +92,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="domains"><?=$lang['edit']['domains'];?></label>
               <div class="col-sm-10">
-                <select id="domains" name="domains" multiple required>
+                <select data-live-search="true" id="domains" name="domains" multiple required>
                 <?php
                 foreach ($result['selected_domains'] as $domain):
                 ?>
@@ -141,7 +153,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       !empty($_GET["domain"])) {
         $domain = $_GET["domain"];
         $result = mailbox('get', 'domain_details', $domain);
-        $rl = mailbox('get', 'ratelimit', $domain);
+        $rl = ratelimit('get', 'domain', $domain);
         $rlyhosts = relayhost('get');
         if (!empty($result)) {
         ?>
@@ -186,7 +198,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="quota">Relayhost</label>
               <div class="col-sm-10">
-                <select name="relayhost" id="relayhost" class="form-control">
+                <select data-live-search="true" name="relayhost" id="relayhost" class="form-control">
                   <?php
                   foreach ($rlyhosts as $rlyhost) {
                   ?>
@@ -254,7 +266,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           </select>
         </div>
         <div class="form-group">
-          <button class="btn btn-default" id="edit_selected" data-id="domratelimit" data-item="<?=$domain;?>" data-api-url='edit/ratelimit' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
+          <button class="btn btn-default" id="edit_selected" data-id="domratelimit" data-item="<?=$domain;?>" data-api-url='edit/rl-domain' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
         </div>
       </form>
       <hr>
@@ -317,7 +329,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       !empty($_GET["aliasdomain"])) {
         $alias_domain = html_entity_decode(rawurldecode($_GET["aliasdomain"]));
         $result = mailbox('get', 'alias_domain_details', $alias_domain);
-        $rl = mailbox('get', 'ratelimit', $alias_domain);
+        $rl = ratelimit('get', 'domain', $alias_domain);
         if (!empty($result)) {
         ?>
           <h4><?=$lang['edit']['edit_alias_domain'];?></h4>
@@ -356,7 +368,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               </select>
             </div>
             <div class="form-group">
-              <button class="btn btn-default" id="edit_selected" data-id="domratelimit" data-item="<?=$alias_domain;?>" data-api-url='edit/ratelimit' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
+              <button class="btn btn-default" id="edit_selected" data-id="domratelimit" data-item="<?=$alias_domain;?>" data-api-url='edit/rl-domain' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
             </div>
           </form>
           <?php
@@ -383,12 +395,12 @@ if (isset($_SESSION['mailcow_cc_role'])) {
     elseif (isset($_GET['mailbox']) && filter_var(html_entity_decode(rawurldecode($_GET["mailbox"])), FILTER_VALIDATE_EMAIL) && !empty($_GET["mailbox"])) {
       $mailbox = html_entity_decode(rawurldecode($_GET["mailbox"]));
       $result = mailbox('get', 'mailbox_details', $mailbox);
-      $rl = mailbox('get', 'ratelimit', $mailbox);
+      $rl = ratelimit('get', 'mailbox', $mailbox);
       if (!empty($result)) {
         ?>
         <h4><?=$lang['edit']['mailbox'];?></h4>
         <form class="form-horizontal" data-id="editmailbox" role="form" method="post">
-          <input type="hidden" value="0" name="sender_acl">
+          <input type="hidden" value="default" name="sender_acl">
           <input type="hidden" value="0" name="active">
           <input type="hidden" value="0" name="force_pw_update">
           <div class="form-group">
@@ -408,7 +420,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="sender_acl"><?=$lang['edit']['sender_acl'];?>:</label>
             <div class="col-sm-10">
-              <select data-width="100%" style="width:100%" id="sender_acl" name="sender_acl" size="10" multiple>
+              <select data-live-search="true" data-width="100%" style="width:100%" id="sender_acl" name="sender_acl" size="10" multiple>
               <?php
               $sender_acl_handles = mailbox('get', 'sender_acl_handles', $mailbox);
 
@@ -456,6 +468,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
 
               ?>
               </select>
+              <div style="display:none" id="sender_acl_disabled"><?=$lang['edit']['sender_acl_disabled'];?></div>
             </div>
           </div>
           <div class="form-group">
@@ -509,7 +522,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                 </select>
               </div>
               <div class="form-group">
-                <button class="btn btn-default" id="edit_selected" data-id="mboxratelimit" data-item="<?=htmlspecialchars($mailbox);?>" data-api-url='edit/ratelimit' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
+                <button class="btn btn-default" id="edit_selected" data-id="mboxratelimit" data-item="<?=htmlspecialchars($mailbox);?>" data-api-url='edit/rl-mbox' data-api-attr='{}' href="#"><?=$lang['admin']['save'];?></button>
               </div>
             </div>
           </div>
@@ -629,23 +642,23 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         $result = bcc('details', $bcc);
         if (!empty($result)) {
           ?>
-          <h4>BCC map</h4>
+          <h4><?=$lang['mailbox']['bcc_map'];?></h4>
           <br />
           <form class="form-horizontal" data-id="editbcc" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <div class="form-group">
-              <label class="control-label col-sm-2" for="bcc_dest">BCC destination</label>
+              <label class="control-label col-sm-2" for="bcc_dest"><?=$lang['mailbox']['bcc_destination'];?></label>
               <div class="col-sm-10">
-                <textarea id="bcc_dest" class="form-control" autocapitalize="none" autocorrect="off" rows="10" id="bcc_dest" name="bcc_dest" required><?=$result['bcc_dest'];?></textarea>
-                <small>BCC destination must be a single valid email address.</small>
+                <input value="<?=$result['bcc_dest'];?>" type="text" class="form-control" name="bcc_dest" id="bcc_dest">
+                <small><?=$lang['edit']['bcc_dest_format'];?></small>
               </div>
             </div>
             <div class="form-group">
-              <label class="control-label col-sm-2" for="type">Type:</label>
+              <label class="control-label col-sm-2" for="type"><?=$lang['mailbox']['bcc_map_type'];?></label>
               <div class="col-sm-10">
                 <select id="addFilterType" name="type" id="type" required>
-                  <option value="sender" <?=($result['type'] == 'sender') ? 'selected' : null;?>>Sender map</option>
-                  <option value="rcpt" <?=($result['type'] == 'rcpt') ? 'selected' : null;?>>Recipient map</option>
+                  <option value="sender" <?=($result['type'] == 'sender') ? 'selected' : null;?>><?=$lang['mailbox']['bcc_sender_map'];?></option>
+                  <option value="rcpt" <?=($result['type'] == 'rcpt') ? 'selected' : null;?>><?=$lang['mailbox']['bcc_rcpt_map'];?></option>
                 </select>
               </div>
             </div>
@@ -673,17 +686,27 @@ if (isset($_SESSION['mailcow_cc_role'])) {
     elseif (isset($_GET['recipient_map']) && !empty($_GET["recipient_map"])) {
         $map = intval($_GET["recipient_map"]);
         $result = recipient_map('details', $map);
+        if (substr($result['recipient_map_old'], 0, 1) == '@') {
+          $result['recipient_map_old'] = substr($result['recipient_map_old'], 1);
+        }
         if (!empty($result)) {
           ?>
-          <h4>Recipient map: <?=$result['recipient_map_old'];?></h4>
+          <h4><?=$lang['mailbox']['recipient_map']?>: <?=$result['recipient_map_old'];?></h4>
           <br />
           <form class="form-horizontal" data-id="edit_recipient_map" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <div class="form-group">
-              <label class="control-label col-sm-2" for="recipient_map_new">New destination</label>
+              <label class="control-label col-sm-2" for="recipient_map_new"><?=$lang['mailbox']['recipient_map_old'];?></label>
               <div class="col-sm-10">
-                <textarea id="recipient_map_new" class="form-control" autocapitalize="none" autocorrect="off" rows="10" id="recipient_map_new" name="recipient_map_new" required><?=$result['recipient_map_new'];?></textarea>
-                <small>Recipient map destinations can only be valid email addresses. Separated by whitespace, semicolon, new line or comma.</small>
+                <input value="<?=$result['recipient_map_old'];?>" type="text" class="form-control" name="recipient_map_old" id="recipient_map_old">
+                <small><?=$lang['mailbox']['recipient_map_old_info'];?></small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="recipient_map_new"><?=$lang['mailbox']['recipient_map_new'];?></label>
+              <div class="col-sm-10">
+                <input value="<?=$result['recipient_map_new'];?>" type="text" class="form-control" name="recipient_map_new" id="recipient_map_new">
+                <small><?=$lang['mailbox']['recipient_map_new_info'];?></small>
               </div>
             </div>
             <div class="form-group">
@@ -723,6 +746,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <input type="hidden" value="0" name="automap">
             <input type="hidden" value="0" name="skipcrossduplicates">
             <input type="hidden" value="0" name="active">
+            <input type="hidden" value="0" name="subscribeall">
             <div class="form-group">
               <label class="control-label col-sm-2" for="host1"><?=$lang['edit']['hostname'];?></label>
               <div class="col-sm-10">
@@ -761,7 +785,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               <label class="control-label col-sm-2" for="mins_interval"><?=$lang['edit']['mins_interval'];?></label>
               <div class="col-sm-10">
                 <input type="number" class="form-control" name="mins_interval" min="1" max="3600" value="<?=htmlspecialchars($result['mins_interval'], ENT_QUOTES, 'UTF-8');?>" required>
-                <small class="help-block">10-3600</small>
+                <small class="help-block">1-3600</small>
               </div>
             </div>
             <div class="form-group">
@@ -785,43 +809,70 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               </div>
             </div>
             <div class="form-group">
+              <label class="control-label col-sm-2" for="timeout1"><?=$lang['add']['timeout1'];?></label>
+              <div class="col-sm-10">
+              <input type="number" class="form-control" name="timeout1" id="timeout1" min="1" max="32000" value="<?=htmlspecialchars($result['timeout1'], ENT_QUOTES, 'UTF-8');?>">
+              <small class="help-block">1-32000</small>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="timeout2"><?=$lang['add']['timeout2'];?></label>
+              <div class="col-sm-10">
+              <input type="number" class="form-control" name="timeout2" id="timeout2" min="1" max="32000" value="<?=htmlspecialchars($result['timeout2'], ENT_QUOTES, 'UTF-8');?>">
+              <small class="help-block">1-32000</small>
+              </div>
+            </div>
+            <div class="form-group">
               <label class="control-label col-sm-2" for="exclude"><?=$lang['edit']['exclude'];?></label>
               <div class="col-sm-10">
               <input type="text" class="form-control" name="exclude" id="exclude" value="<?=htmlspecialchars($result['exclude'], ENT_QUOTES, 'UTF-8');?>">
               </div>
             </div>
             <div class="form-group">
+              <label class="control-label col-sm-2" for="custom_params"><?=$lang['add']['custom_params'];?></label>
+              <div class="col-sm-10">
+              <input type="text" class="form-control" name="custom_params" id="custom_params" value="<?=htmlspecialchars($result['custom_params'], ENT_QUOTES, 'UTF-8');?>">
+              </div>
+            </div>
+            <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                <label><input type="checkbox" value="1" name="delete2duplicates" <?=($result['delete2duplicates']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete2duplicates'];?></label>
+                <label><input type="checkbox" value="1" name="delete2duplicates" <?=($result['delete2duplicates']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete2duplicates'];?> (--delete2duplicates)</label>
                 </div>
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                <label><input type="checkbox" value="1" name="delete1" <?=($result['delete1']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete1'];?></label>
+                <label><input type="checkbox" value="1" name="delete1" <?=($result['delete1']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete1'];?> (--delete1)</label>
                 </div>
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                <label><input type="checkbox" value="1" name="delete2" <?=($result['delete2']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete2'];?></label>
+                <label><input type="checkbox" value="1" name="delete2" <?=($result['delete2']=="1") ? "checked" : "";?>> <?=$lang['edit']['delete2'];?> (--delete2)</label>
                 </div>
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                <label><input type="checkbox" value="1" name="automap" <?=($result['automap']=="1") ? "checked" : "";?>> <?=$lang['edit']['automap'];?></label>
+                <label><input type="checkbox" value="1" name="automap" <?=($result['automap']=="1") ? "checked" : "";?>> <?=$lang['edit']['automap'];?> (--automap)</label>
                 </div>
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                <label><input type="checkbox" value="1" name="skipcrossduplicates" <?=($result['skipcrossduplicates']=="1") ? "checked" : "";?>> <?=$lang['edit']['skipcrossduplicates'];?></label>
+                <label><input type="checkbox" value="1" name="skipcrossduplicates" <?=($result['skipcrossduplicates']=="1") ? "checked" : "";?>> <?=$lang['edit']['skipcrossduplicates'];?> (--skipcrossduplicates)</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="subscribeall" <?=($result['subscribeall']=="1") ? "checked" : "";?>> <?=$lang['add']['subscribeall'];?> (--subscribeall)</label>
                 </div>
               </div>
             </div>

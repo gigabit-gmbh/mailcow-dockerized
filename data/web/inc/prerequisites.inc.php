@@ -51,6 +51,51 @@ catch (PDOException $e) {
 <?php
 exit;
 }
+function pdo_exception_handler($e) {
+    if ($e instanceof PDOException) {
+      $_SESSION['return'][] = array(
+        'type' => 'danger',
+        'log' => array(__FUNCTION__),
+        'msg' => array('mysql_error', $e)
+      );
+      return false;
+    }
+    else {
+      $_SESSION['return'][] = array(
+        'type' => 'danger',
+        'log' => array(__FUNCTION__),
+        'msg' => array('mysql_error', 'unknown error')
+      );
+      return false;
+    }
+}
+set_exception_handler('pdo_exception_handler');
+
+// TODO: Move function
+function get_remote_ip($anonymize = null) {
+  global $ANONYMIZE_IPS;
+  if ($anonymize === null) { 
+    $anonymize = $ANONYMIZE_IPS;
+  }
+  elseif ($anonymize !== true && $anonymize !== false)  {
+    $anonymize = true;
+  }
+  $remote = $_SERVER['REMOTE_ADDR'];
+  if (filter_var($remote, FILTER_VALIDATE_IP) === false) {
+    return '0.0.0.0';
+  }
+  if ($anonymize) {
+    if (strlen(inet_pton($remote)) == 4) {
+      return inet_ntop(inet_pton($remote) & inet_pton("255.255.255.0"));
+    }
+    elseif (strlen(inet_pton($remote)) == 16) {
+      return inet_ntop(inet_pton($remote) & inet_pton('ffff:ffff:ffff:ffff:0000:0000:0000:0000'));
+    }
+  }
+  else {
+    return $remote;
+  }
+}
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/sessions.inc.php';
 
@@ -87,7 +132,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.quarantine.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.policy.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.dkim.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.fwdhost.inc.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.ratelimit.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.relayhost.inc.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.rsettings.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.fail2ban.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/functions.docker.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/init_db.inc.php';

@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM ubuntu:bionic
 LABEL maintainer "Andre Peters <andre.peters@servercow.de>"
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -19,13 +19,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	postfix \
 	postfix-mysql \
 	postfix-pcre \
-	python-gpgme \
+	python-gpg \
 	sasl2-bin \
 	sudo \
 	supervisor \
 	syslog-ng \
 	syslog-ng-core \
 	syslog-ng-mod-redis \
+  tzdata \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& touch /etc/default/locale \
   && printf '#!/bin/bash\n/usr/sbin/postconf -c /opt/postfix/conf "$@"' > /usr/local/sbin/postconf \
@@ -44,6 +45,8 @@ COPY zeyple.conf /etc/zeyple.conf
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 COPY postfix.sh /opt/postfix.sh
+COPY rspamd-pipe-ham /usr/local/bin/rspamd-pipe-ham
+COPY rspamd-pipe-spam /usr/local/bin/rspamd-pipe-spam
 COPY whitelist_forwardinghosts.sh /usr/local/bin/whitelist_forwardinghosts.sh
 
 EXPOSE 588

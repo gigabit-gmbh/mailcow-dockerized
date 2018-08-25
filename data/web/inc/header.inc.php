@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="<?= $_SESSION['mailcow_locale'] ?>">
 <head>
 <meta charset="utf-8">
@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="/css/mailcow.css">
 <link rel="stylesheet" href="/css/animate.min.css">
 <link rel="stylesheet" href="/css/numberedtextarea.min.css">
+<link rel="stylesheet" href="/css/jquery.jqplot.min.css">
 <?= (preg_match("/mailbox.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/mailbox.css">' : null; ?>
 <?= (preg_match("/admin.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/admin.css">' : null; ?>
 <?= (preg_match("/user.php/i", $_SERVER['REQUEST_URI'])) ? '<link rel="stylesheet" href="/css/user.css">' : null; ?>
@@ -129,11 +130,11 @@
         }
         if (!isset($_SESSION['dual-login']) && isset($_SESSION['mailcow_cc_username'])):
         ?>
-          <li class="logged-in-as"><a href="#" onclick="logout.submit()"><b><?= htmlspecialchars($_SESSION['mailcow_cc_username']); ?></b> <span class="glyphicon glyphicon-log-out"></span></a></li>
+          <li class="logged-in-as"><a href="#" onclick="logout.submit()"><b class="username-lia"><?= htmlspecialchars($_SESSION['mailcow_cc_username']); ?></b> <span class="glyphicon glyphicon-log-out"></span></a></li>
         <?php
         elseif (isset($_SESSION['dual-login'])):
         ?>
-          <li class="logged-in-as"><a href="#" onclick="logout.submit()"><b><?= htmlspecialchars($_SESSION['mailcow_cc_username']); ?> <span class="text-info">(<?= htmlspecialchars($_SESSION['dual-login']['username']); ?>)</span> </b><span class="glyphicon glyphicon-log-out"></span></a></li>
+          <li class="logged-in-as"><a href="#" onclick="logout.submit()"><b class="username-lia"><?= htmlspecialchars($_SESSION['mailcow_cc_username']); ?> <span class="text-info">(<?= htmlspecialchars($_SESSION['dual-login']['username']); ?>)</span> </b><span class="glyphicon glyphicon-log-out"></span></a></li>
         <?php
         endif;
         ?>

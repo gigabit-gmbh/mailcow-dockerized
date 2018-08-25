@@ -5,60 +5,111 @@
 
 $lang['footer']['loading'] = 'Einen Moment bitte...';
 $lang['header']['restart_sogo'] = 'SOGo neustarten';
+$lang['header']['restart_netfilter'] = 'Netfilter neustarten';
 $lang['footer']['restart_container'] = 'Container neustarten';
 $lang['footer']['restart_now'] = 'Jetzt neustarten';
-$lang['footer']['restart_container_info'] = '<b>Wichtig:</b> Ein korrekter Neustart eines Containers kann eine Weile in Anspruch nehmen, bitte warten Sie, bis der Prozess vollständig beendet wurde.';
+$lang['footer']['restarting_container'] = 'Container wird neugestartet, bitte warten...';
+$lang['footer']['restart_container_info'] = '<b>Wichtig:</b> Der Neustart eines Containers kann eine Weile in Anspruch nehmen.';
 
 $lang['footer']['confirm_delete'] = 'Löschen bestätigen';
 $lang['footer']['delete_these_items'] = 'Sind Sie sicher, dass die Änderungen an Elementen mit folgender ID durchgeführt werden sollen?';
 $lang['footer']['delete_now'] = 'Jetzt löschen';
 $lang['footer']['cancel'] = 'Abbrechen';
 
-$lang['danger']['dkim_domain_or_sel_invalid'] = 'DKIM-Domain oder -Selector nicht korrekt';
+$lang['danger']['mysql_error'] = "MySQL Fehler: %s";
+$lang['danger']['redis_error'] = "Redis Fehler: %s";
+$lang['danger']['unknown_tfa_method'] = "Unbekannte TFA Methode";
+$lang['danger']['totp_verification_failed'] = "TOTP Verifizierung fehlgeschlagen";
+$lang['success']['verified_totp_login'] = "TOTP Anmeldung verifiziert";
+$lang['danger']['u2f_verification_failed'] = "U2F Verifizierung fehlgeschlagen: %s";
+$lang['success']['verified_u2f_login'] = "U2F Anmeldung verifiziert";
+$lang['success']['verified_yotp_login'] = "Yubico OTP Anmeldung verifiziert";
+$lang['danger']['yotp_verification_failed'] = "Yubico OTP Verifizierung fehlgeschlagen: %s";
+$lang['danger']['ip_list_empty'] = "Liste erlaubter IPs darf nicht leer sein";
+$lang['danger']['rspamd_ui_pw_length'] = "Rspamd UI Passwort muss mindestens 6 Zeichen lang sein";
+$lang['success']['rspamd_ui_pw_set'] = "Rspamd UI Passwort wurde gesetzt";
+$lang['danger']['unknown'] = "Ein unbekannter Fehler trat auf";
+$lang['danger']['malformed_username'] = "Benutzername hat falsches Format";
+$lang['info']['awaiting_tfa_confirmation'] = "Warte auf TFA Verifizierung";
+$lang['success']['logged_in_as'] = "Eingeloggt als %s";
+$lang['danger']['login_failed'] = "Anmeldung fehlgeschlagen";
+$lang['danger']['set_acl_failed'] = "ACL konnte nicht gesetzt werden";
+$lang['danger']['no_user_defined'] = "Kein Benutzer definiert";
+$lang['danger']['script_empty'] = "Script darf nicht leer sein";
+$lang['danger']['sieve_error'] = "Sieve Parser: %s";
+$lang['danger']['value_missing'] = "Bitte alle Felder ausfüllen";
+$lang['danger']['filter_type'] = "Falscher Filtertyp";
+$lang['danger']['domain_cannot_match_hostname'] = "Domain darf nicht dem Hostnamen entsprechen";
+$lang['warning']['domain_added_sogo_failed'] = "Domain wurde hinzugefügt; SOGo konnte nicht neugestartet werden";
+$lang['danger']['rl_timeframe'] = "Ratelimit Zeitraum ist inkorrekt";
+$lang['success']['rl_saved'] = "Ratelimit für Objekt %s wurde gesetzt";
+$lang['success']['deleted_syncjobs'] = "Syncjobs gelöscht: %s";
+$lang['success']['deleted_syncjob'] = "Syncjobs ID %s gelöscht";
+$lang['success']['delete_filters'] = "Filter gelöscht: %s";
+$lang['success']['delete_filter'] = "Filter ID %s wurde gelöscht";
+$lang['danger']['invalid_bcc_map_type'] = "Ungültiger BCC Map-Typ";
+$lang['danger']['bcc_empty'] = "BCC Ziel darf nicht leer sein";
+$lang['danger']['bcc_must_be_email'] = "BCC Map %s ist keine gültige E-Mail-Adresse";
+$lang['danger']['bcc_exists'] = "Ein BCC Map Eintrag %s existiert bereits als Typ %s";
+$lang['success']['bcc_saved'] = "BCC Map Eintrag wurde gespeichert";
+$lang['success']['bcc_edited'] = "BCC Map Eintrag %s wurde editiert";
+$lang['success']['bcc_deleted'] = "BCC Map Einträge gelöscht: %s";
+$lang['danger']['private_key_error'] = "Schlüsselfehler: %s";
+$lang['danger']['map_content_empty'] = "Inhalt darf nicht leer sein";
+$lang['success']['settings_map_added'] = "Regel wurde gespeichert";
+$lang['danger']['settings_map_invalid'] = "Regel ID %s ist ungültig";
+$lang['danger']['settings_map_removed'] = "Regeln wurden entfernt: %s";
+$lang['danger']['invalid_host'] = "Ungültiger Host: %s";
+$lang['danger']['relayhost_invalid'] = "Relayhost %s ist ungültig";
+$lang['success']['saved_settings'] = "Regel wurde gespeichert";
+
+$lang['danger']['dkim_domain_or_sel_invalid'] = 'DKIM-Domain oder Selektor nicht korrekt: %s';
 $lang['success']['dkim_removed'] = 'DKIM-Key wurde entfernt';
 $lang['success']['dkim_added'] = 'DKIM-Key wurde hinzugefügt';
+$lang['success']['dkim_duplicated'] = "DKIM-Key der Domain %s wurde auf Domain %s kopiert";
 $lang['danger']['access_denied'] = 'Zugriff verweigert oder unvollständige/ungültige Daten';
-$lang['danger']['domain_invalid'] = 'Domainname ist ungültig';
+$lang['danger']['domain_invalid'] = 'Domainname %s ist ungültig';
 $lang['danger']['mailbox_quota_exceeds_domain_quota'] = 'Maximale Größe für Mailboxen überschreitet das Domain Speicherlimit';
 $lang['danger']['object_is_not_numeric'] = 'Wert %s ist nicht numerisch';
 $lang['success']['domain_added'] = 'Domain %s wurde angelegt';
 $lang['success']['items_deleted'] = "Objekt(e) %s wurde(n) erfolgreich entfernt";
+$lang['success']['item_deleted'] = "Objekt %s wurde entfernt";
 $lang['danger']['alias_empty'] = 'Alias-Adresse darf nicht leer sein';
 $lang['danger']['goto_empty'] = 'Ziel-Adresse darf nicht leer sein';
 $lang['danger']['policy_list_from_exists'] = 'Ein Eintrag mit diesem Wert existiert bereits';
 $lang['danger']['policy_list_from_invalid'] = 'Eintrag hat ungültiges Format';
-$lang['danger']['alias_invalid'] = 'Alias-Adresse ist ungültig';
-$lang['danger']['goto_invalid'] = 'Ziel-Adresse ist ungültig';
+$lang['danger']['alias_invalid'] = 'Alias-Adresse %s ist ungültig';
+$lang['danger']['goto_invalid'] = 'Ziel-Adresse %s ist ungültig';
 $lang['danger']['last_key'] = 'Letzter Key kann nicht gelöscht werden';
-$lang['danger']['alias_domain_invalid'] = 'Alias-Domain ist ungültig';
-$lang['danger']['target_domain_invalid'] = 'Ziel-Domain ist ungültig';
+$lang['danger']['alias_domain_invalid'] = 'Alias-Domain %s ist ungültig';
+$lang['danger']['target_domain_invalid'] = 'Ziel-Domain %s ist ungültig';
 $lang['danger']['object_exists'] = 'Objekt %s existiert bereits';
 $lang['danger']['domain_exists'] = 'Domain %s existiert bereits';
 $lang['danger']['alias_goto_identical'] = 'Alias- und Ziel-Adresse dürfen nicht identisch sein';
-$lang['danger']['aliasd_targetd_identical'] = 'Alias-Domain darf nicht gleich Ziel-Domain sein';
+$lang['danger']['aliasd_targetd_identical'] = 'Alias-Domain darf nicht gleich Ziel-Domain sein: %s';
 $lang['danger']['maxquota_empty'] = 'Max. Speicherplatz pro Mailbox darf nicht 0 sein.';
-$lang['success']['alias_added'] = 'Alias-Adresse(n) wurden angelegt';
+$lang['success']['alias_added'] = 'Alias-Adresse %s wurden angelegt';
 $lang['success']['alias_modified'] = 'Änderungen an Alias %s wurden gespeichert';
 $lang['success']['aliasd_modified'] = 'Änderungen an Alias-Domain %s wurden gespeichert';
 $lang['success']['mailbox_modified'] = 'Änderungen an Mailbox %s wurden gespeichert';
 $lang['success']['resource_modified'] = "Änderungen an Ressource %s wurden gespeichert";
 $lang['success']['object_modified'] = "Änderungen an Objekt %s wurden gespeichert";
 $lang['success']['f2b_modified'] = "Änderungen an Fail2ban Parametern wurden gespeichert";
-$lang['danger']['targetd_not_found'] = 'Ziel-Domain nicht gefunden';
+$lang['danger']['targetd_not_found'] = 'Ziel-Domain %s nicht gefunden';
 $lang['success']['aliasd_added'] = 'Alias-Domain %s wurde angelegt';
 $lang['success']['aliasd_modified'] = 'Änderungen an Alias-Domain %s wurden gespeichert';
 $lang['success']['domain_modified'] = 'Änderungen an Domain %s wurden gespeichert';
 $lang['success']['domain_admin_modified'] = 'Änderungen an Domain-Administrator %s wurden gespeichert';
 $lang['success']['domain_admin_added'] = 'Domain-Administrator %s wurde angelegt';
 $lang['success']['admin_modified'] = 'Änderungen am Administrator wurden gespeichert';
-$lang['danger']['username_invalid'] = 'Benutzername kann nicht verwendet werden';
+$lang['danger']['username_invalid'] = 'Benutzername %s kann nicht verwendet werden';
 $lang['danger']['password_mismatch'] = 'Passwort-Wiederholung stimmt nicht überein';
 $lang['danger']['password_complexity'] = 'Passwort entspricht nicht den Richtlinien';
 $lang['danger']['password_empty'] = 'Passwort darf nicht leer sein';
 $lang['danger']['login_failed'] = 'Anmeldung fehlgeschlagen';
 $lang['danger']['mailbox_invalid'] = 'Mailboxname ist ungültig';
-$lang['danger']['resource_invalid'] = 'Ressourcenname ist ungültig';
-$lang['danger']['description_invalid'] = 'Ressourcenbeschreibung ist ungültig';
+$lang['danger']['resource_invalid'] = 'Ressourcenname %s ist ungültig';
+$lang['danger']['description_invalid'] = 'Ressourcenbeschreibung für %s ist ungültig';
 $lang['danger']['is_alias'] = '%s lautet bereits eine Alias-Adresse';
 $lang['danger']['is_alias_or_mailbox'] = "Eine Mailbox, ein Alias oder eine sich aus einer Alias-Domain ergebende Adresse mit dem Namen %s ist bereits vorhanden";
 $lang['danger']['is_spam_alias'] = '%s lautet bereits eine Spam-Alias-Adresse';
@@ -81,7 +132,7 @@ $lang['danger']['max_quota_in_use'] = 'Mailbox Speicherplatzlimit muss größer 
 $lang['danger']['domain_quota_m_in_use'] = 'Domain Speicherplatzlimit muss größer oder gleich %d MiB sein';
 $lang['danger']['mailboxes_in_use'] = 'Maximale Anzahl an Mailboxen muss größer oder gleich %d sein';
 $lang['danger']['aliases_in_use'] = 'Maximale Anzahl an Aliassen muss größer oder gleich %d sein';
-$lang['danger']['sender_acl_invalid'] = 'Sender ACL Wert muss eine Adresse oder Domain sein';
+$lang['danger']['sender_acl_invalid'] = 'Sender ACL %s ist ungültig';
 $lang['danger']['domain_not_empty'] = 'Kann nur leere Domains entfernen';
 $lang['danger']['validity_missing'] = 'Bitte geben Sie eine Gültigkeitsdauer an';
 $lang['user']['loading'] = "Lade...";
@@ -200,6 +251,7 @@ $lang['mailbox']['kind'] = 'Art';
 $lang['mailbox']['description'] = 'Beschreibung';
 $lang['mailbox']['resources'] = 'Ressourcen';
 $lang['mailbox']['domains'] = 'Domains';
+$lang['admin']['domain_s'] = 'Domain(s)';
 $lang['mailbox']['mailboxes'] = 'Mailboxen';
 $lang['mailbox']['mailbox_quota'] = 'Max. Größe einer Mailbox';
 $lang['mailbox']['domain_quota'] = 'Gesamtspeicher';
@@ -298,6 +350,11 @@ $lang['add']['exclude'] = 'Elemente ausschließen (Regex)';
 $lang['add']['delete2duplicates'] = 'Lösche Duplikate im Ziel';
 $lang['add']['delete1'] = 'Lösche Nachricht nach Übertragung vom Quell-Server';
 $lang['add']['delete2'] = 'Lösche Nachrichten von Ziel-Server, die nicht auf Quell-Server vorhanden sind';
+$lang['add']['custom_params'] = 'Eigene Parameter';
+$lang['add']['subscribeall'] = 'Alle synchronisierten Ordner abonnieren';
+$lang['add']['timeout1'] = 'Timeout für Verbindung zum Remote-Host';
+$lang['add']['timeout2'] = 'Timeout für Verbindung zum lokalen Host';
+
 $lang['edit']['delete2duplicates'] = 'Lösche Duplikate im Ziel';
 $lang['edit']['delete1'] = 'Lösche Nachricht nach Übertragung vom Quell-Server';
 $lang['edit']['delete2'] = 'Lösche Nachrichten von Ziel-Server, die nicht auf Quell-Server vorhanden sind';
@@ -332,6 +389,8 @@ $lang['add']['password'] = 'Passwort';
 $lang['add']['password_repeat'] = 'Passwort (Wiederholung)';
 $lang['add']['restart_sogo_hint'] = 'Der SOGo Container muss nach dem Hinzufügen einer neuen Domain neugestartet werden!';
 $lang['add']['goto_null'] = 'Nachrichten sofort verwerfen';
+$lang['add']['goto_ham'] = 'Nachrichten als <span class="text-success"><b>Ham</b></span> lernen';
+$lang['add']['goto_spam'] = 'Nachrichten als <span class="text-danger"><b>Spam</b></span> lernen';
 $lang['add']['validation_success'] = 'Erfolgreich validiert';
 $lang['add']['activate_filter_warn'] = 'Alle anderen Filter diesen Typs werden deaktiviert, falls dieses Script aktiv markiert wird.';
 $lang['add']['validate'] = 'Validieren';
@@ -373,11 +432,16 @@ $lang['tfa']['scan_qr_code'] = "Bitte scannen Sie jetzt den angezeigten QR-Code:
 $lang['tfa']['enter_qr_code'] = "Falls Sie den angezeigten QR-Code nicht scannen können, verwenden Sie bitte nachstehenden Sicherheitsschlüssel";
 $lang['tfa']['confirm_totp_token'] = "Bitte bestätigen Sie die Änderung durch Eingabe eines generierten Tokens";
 
+$lang['admin']['rspamd-com_settings'] = '<a href="https://rspamd.com/doc/configuration/settings.html#settings-structure" target="_blank">Rspamd docs</a>
+  - Ein Name wird automatisch generiert. Beispielinhalte zur Einsicht stehen nachstehend bereit.';
+  
 $lang['admin']['no_new_rows'] = 'Keine weiteren Zeilen vorhanden';
 $lang['admin']['additional_rows'] = ' zusätzliche Zeilen geladen'; // parses to 'n additional rows were added'
 $lang['admin']['private_key'] = 'Private Key';
 $lang['admin']['import'] = 'Importieren';
+$lang['admin']['duplicate'] = 'Duplizieren';
 $lang['admin']['import_private_key'] = 'Private Key importieren';
+$lang['admin']['duplicate_dkim'] = 'DKIM duplizieren';
 $lang['admin']['f2b_parameters'] = 'Fail2ban Parameter';
 $lang['admin']['f2b_ban_time'] = 'Banzeit (s)';
 $lang['admin']['f2b_max_attempts'] = 'Max. Versuche';
@@ -394,6 +458,11 @@ $lang['admin']['dkim_keys'] = 'ARC/DKIM-Keys';
 $lang['admin']['dkim_key_valid'] = 'Key gültig';
 $lang['admin']['dkim_key_unused'] = 'Key ohne Zuweisung';
 $lang['admin']['dkim_key_missing'] = 'Key fehlt';
+$lang['admin']['dkim_from'] = 'Von';
+$lang['admin']['dkim_to'] = 'Nach';
+$lang['admin']['dkim_from_title'] = 'Quellobjekt für Duplizierung';
+$lang['admin']['dkim_to_title'] = 'Ziel-Objekt(e) werden überschrieben';
+$lang['admin']['dkim_domains_wo_keys'] = "Domains mit fehlenden Keys auswählen";
 $lang['admin']['add'] = 'Hinzufügen';
 $lang['add']['add_domain_restart'] = 'Domain hinzufügen und SOGo neustarten';
 $lang['add']['add_domain_only'] = 'Nur Domain hinzufügen';
@@ -404,6 +473,15 @@ $lang['admin']['active'] = 'Aktiv';
 $lang['admin']['inactive'] = 'Inaktiv';
 $lang['admin']['action'] = 'Aktion';
 $lang['admin']['add_domain_admin'] = 'Domain-Administrator hinzufügen';
+$lang['admin']['add_settings_rule'] = 'Rspamd Regel hinzufügen';
+$lang['admin']['rsetting_desc'] = 'Kurze Beschreibung';
+$lang['admin']['rsetting_content'] = 'Regelinhalt';
+$lang['admin']['rsetting_none'] = 'Keine Regel hinterlegt';
+$lang['admin']['rsetting_no_selection'] = 'Bitte eine Regel auswählen';
+$lang['admin']['rsettings_preset_1'] = 'Alles außer DKIM and Ratelimits für authentifizierte Benutzer deaktivieren"';
+$lang['admin']['rsettings_preset_2'] = 'Spam an Postmaster-Addressen nicht blockieren';
+$lang['admin']['rsettings_insert_preset'] = 'Beispiel "%s" laden';
+$lang['admin']['rsetting_add_rule'] = 'Regel hinzufügen';
 $lang['admin']['admin_domains'] = 'Domain-Zuweisungen';
 $lang['admin']['domain_admins'] = 'Domain-Administratoren';
 $lang['admin']['username'] = 'Benutzername';
@@ -438,10 +516,14 @@ $lang['admin']['api_allow_from'] = "IP-Adressen für Zugriff";
 $lang['admin']['api_key'] = "API-Key";
 $lang['admin']['activate_api'] = "API aktivieren";
 $lang['admin']['regen_api_key'] = "API-Key regenerieren";
+$lang['admin']['ban_list_info'] = "Übersicht ausgesperrter Netzwerke: <b>Netzwerk (verbleibende Banzeit) - [Aktionen]</b>.<br />IPs, die zum Unban eingereiht werden, verlassen die Liste aktiver Bans nach wenigen Sekunden.<br />Rote Labels sind Indikatoren für aktive Blacklisteinträge.";
+$lang['admin']['unban_pending'] = "ausstehend";
+$lang['admin']['queue_unban'] = "Unban einreihen";
+$lang['admin']['no_active_bans'] = "Keine aktiven Bans";
 
 $lang['admin']['quarantine'] = "Quarantäne";
-$lang['admin']['quarantine_retention_size'] = "Rückhaltungen pro Mailbox:";
-$lang['admin']['quarantine_max_size'] = "Maximale Größe in MiB (größere Elemente werden verworfen):";
+$lang['admin']['quarantine_retention_size'] = "Rückhaltungen pro Mailbox<br />0 bedeutet <b>inaktiv</b>!";
+$lang['admin']['quarantine_max_size'] = "Maximale Größe in MiB (größere Elemente werden verworfen)<br />0 bedeutet <b>nicht</b> unlimitert!";
 $lang['admin']['quarantine_exclude_domains'] = "Domains und Alias-Domains ausschließen:";
 
 $lang['success']['forwarding_host_removed'] = "Weiterleitungs-Host %s wurde entfernt";
@@ -493,9 +575,11 @@ $lang['success']['ui_texts'] = "Änderungen an UI-Texten";
 $lang['success']['reset_main_logo'] = "Standardgrafik wurde wiederhergestellt";
 $lang['success']['items_released'] = "Ausgewählte Objekte wurden an Mailbox versendet";
 $lang['danger']['imagick_exception'] = "Fataler Bildverarbeitungsfehler";
-
+$lang['quarantine']['learn_spam_delete'] = "Als Spam lernen und löschen";
 $lang['quarantine']['quarantine'] = "Quarantäne";
-$lang['quarantine']['qinfo'] = "Das Quarantänesystem speichert abgelehnte Nachrichten in der Datenbank. Dem Sender wird <em>nicht</em> signalisiert, dass seine E-Mail zugestellt wurde.";
+$lang['quarantine']['qinfo'] = 'Das Quarantänesystem speichert abgelehnte Nachrichten in der Datenbank. Dem Sender wird <em>nicht</em> signalisiert, dass seine E-Mail zugestellt wurde.
+  <br>"' . $lang['quarantine']['learn_spam_delete'] . '" lernt Nachrichten nach bayesscher Statistik als Spam und erstellt Fuzzy Hashes ausgehend von der jeweiligen Nachricht, um ähnliche Inhalte zukünftig zu unterbinden.
+  <br>Der Prozess des Lernens kann abhängig vom System zeitintensiv sein.';
 $lang['quarantine']['release'] = "Freigeben";
 $lang['quarantine']['empty'] = 'Keine Einträge';
 $lang['quarantine']['toggle_all'] = 'Alle auswählen';
@@ -513,20 +597,36 @@ $lang['quarantine']['subj'] = "Betreff";
 $lang['quarantine']['text_plain_content'] = "Inhalt (text/plain)";
 $lang['quarantine']['text_from_html_content'] = "Inhalt (html, konvertiert)";
 $lang['quarantine']['atts'] = "Anhänge";
+$lang['danger']['fuzzy_learn_error'] = "Fuzzy Lernfehler: %s";
+$lang['danger']['spam_learn_error'] = "Spam Lernfehler: %s";
+$lang['success']['qlearn_spam'] = "Nachricht ID %s wurde als Spam gelernt und gelöscht";
 
 $lang['header']['quarantine'] = "Quarantäne";
 $lang['header']['debug'] = "Debugging";
+
+$lang['debug']['log_info'] = '<p>mailcow <b>in-memory Logs</b> werden in Redis Listen gespeichert, die maximale Anzahl der Einträge pro Anwendung richtet sich nach LOG_LINES (%d).
+  <br>In-memory Logs sind vergänglich und nicht zur ständigen Aufbewahrung bestimmt. Alle Anwendungen, die in-memory protokollieren, schreiben ebenso in den Docker Daemon.
+  <br>Das in-memory Protokoll versteht sich als schnelle Übersicht zum Debugging eines Containers, für komplexere Protokolle sollte der Docker Daemon konsultiert werden.</p>
+  <p><b>Externe Logs</b> werden via API externer Applikationen bezogen.</p>
+  <p><b>Statische Logs</b> sind weitesgehend Aktivitätsprotokolle, die nicht in den Docker Daemon geschrieben werden, jedoch permanent verfügbar sein müssen (ausgeschloßen API Logs).</p>';
+
+$lang['debug']['in_memory_logs'] = 'In-memory Logs';
+$lang['debug']['external_logs'] = 'Externe Logs';
+$lang['debug']['static_logs'] = 'Statische Logs';
 
 $lang['quarantine']['release_body'] = "Die ursprüngliche Nachricht wurde als EML-Datei im Anhang hinterlegt.";
 $lang['danger']['release_send_failed'] = "Die Nachricht konnte nicht versendet werden: %s";
 $lang['quarantine']['release_subject'] = "Potentiell schädliche Nachricht aus Quarantäne: %s";
 
+$lang['mailbox']['bcc_map'] = "BCC Map";
 $lang['mailbox']['bcc_map_type'] = "BCC Typ";
 $lang['mailbox']['bcc_type'] = "BCC Typ";
 $lang['mailbox']['bcc_sender_map'] = "Senderabhängig";
 $lang['mailbox']['bcc_rcpt_map'] = "Empfängerabhängig";
 $lang['mailbox']['bcc_local_dest'] = "Lokales Ziel";
-$lang['mailbox']['bcc_destinations'] = "BCC Ziel(e)";
+$lang['mailbox']['bcc_destinations'] = "BCC Ziel";
+$lang['mailbox']['bcc_destination'] = "BCC Ziel";
+$lang['edit']['bcc_dest_format'] = 'BCC-Ziel muss eine gültige E-Mail-Adresse sein.';
 
 $lang['mailbox']['bcc'] = "BCC";
 $lang['mailbox']['bcc_maps'] = "BCC-Maps";
@@ -536,9 +636,18 @@ $lang['mailbox']['add_bcc_entry'] = "BCC-Eintrag hinzufügen";
 $lang['mailbox']['bcc_info'] = "Eine empfängerabhängige Map wird verwendet, wenn die BCC-Map Eintragung auf den Eingang einer E-Mail auf das lokale Ziel reagieren soll. Senderabhängige Maps verfahren nach dem gleichen Prinzip.<br/>
   Das lokale Ziel wird bei Fehlzustellungen an ein BCC-Ziel nicht informiert.";
 $lang['mailbox']['address_rewriting'] = 'Adressumschreibung';
+
 $lang['mailbox']['recipient_maps'] = 'Empfängerumschreibungen';
+$lang['mailbox']['recipient_map'] = 'Empfängerumschreibung';
 $lang['mailbox']['recipient_map_info'] = 'Empfängerumschreibung ersetzen den Empfänger einer E-Mail vor dem Versand.';
+$lang['mailbox']['recipient_map_old_info'] = 'Der originale Empfänger muss eine E-Mail-Adresse oder ein Domainname sein.';
+$lang['mailbox']['recipient_map_new_info'] = 'Der neue Empfänger muss eine E-Mail-Adresse sein.';
 $lang['mailbox']['recipient_map_old'] = 'Original Empfänger';
 $lang['mailbox']['recipient_map_new'] = 'Neuer Empfänger';
 $lang['mailbox']['add_recipient_map_entry'] = 'Empfängerumschreibung hinzufügen';
-$lang['mailbox']['add_sender_map_entry'] = 'Senderumschreibung hinzufügen';
+$lang['danger']['invalid_recipient_map_new'] = 'Neuer Empfänger %s ist ungültig';
+$lang['danger']['invalid_recipient_map_old'] = 'Originaler Empfänger %s ist ungültig';
+$lang['danger']['recipient_map_entry_exists'] = 'Eine Empfängerumschreibung für %s existiert bereits';
+$lang['success']['recipient_map_entry_saved'] = 'Empfängerumschreibung für Objekt %s wurde gespeichert';
+$lang['success']['recipient_map_entry_deleted'] = 'Empfängerumschreibung für Objekt %s wurde gelöscht';
+

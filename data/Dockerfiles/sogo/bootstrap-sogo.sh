@@ -9,8 +9,8 @@ done
 # Wait until port becomes free and send sig
 until ! nc -z sogo-mailcow 20000;
 do
-        killall -TERM sogod
-        sleep 3
+  killall -TERM sogod
+  sleep 3
 done
 
 # Recreate view
@@ -33,6 +33,44 @@ EOF
     sleep 3
   fi
 done
+
+# Wait for static view table if missing after update and update content
+
+while [[ ${STATIC_VIEW_OK} != 'OK' ]]; do
+  if [[ ! -z $(mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} -B -e "SELECT 'OK' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '_sogo_static_view'") ]]; then
+    STATIC_VIEW_OK=OK
+    echo "Updating _sogo_static_view content..."
+    mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} -B -e "REPLACE INTO _sogo_static_view SELECT * from sogo_view"
+    mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} -B -e "DELETE FROM _sogo_static_view WHERE c_uid NOT IN (SELECT username FROM mailbox WHERE active = '1')"
+  else
+    echo "Waiting for database initialization..."
+    sleep 3
+  fi
+done
+
+# Recreate password update trigger
+
+mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "DROP TRIGGER IF EXISTS sogo_update_password"
+
+while [[ ${TRIGGER_OK} != 'OK' ]]; do
+  mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} << EOF
+DELIMITER -
+CREATE TRIGGER sogo_update_password AFTER UPDATE ON _sogo_static_view
+FOR EACH ROW
+BEGIN
+UPDATE mailbox SET password = NEW.c_password WHERE NEW.c_uid = username;
+END;
+-
+DELIMITER ;
+EOF
+  if [[ ! -z $(mysql --host mysql -u ${DBUSER} -p${DBPASS} ${DBNAME} -B -e "SELECT 'OK' FROM INFORMATION_SCHEMA.TRIGGERS WHERE TRIGGER_NAME = 'sogo_update_password'") ]]; then
+    TRIGGER_OK=OK
+  else
+    echo "Will retry to setup SOGo password update trigger in 3s"
+    sleep 3
+  fi
+done
+
 
 mkdir -p /var/lib/sogo/GNUstep/Defaults/
 
@@ -97,8 +135,10 @@ while read line
                     <string>sql</string>
                     <key>userPasswordAlgorithm</key>
                     <string>ssha256</string>
+                    <key>prependPasswordScheme</key>
+                    <string>YES</string>
                     <key>viewURL</key>
-                    <string>mysql://${DBUSER}:${DBPASS}@mysql:3306/${DBNAME}/sogo_view</string>
+                    <string>mysql://${DBUSER}:${DBPASS}@mysql:3306/${DBNAME}/_sogo_static_view</string>
                 </dict>
             </array>
         </dict>" >> /var/lib/sogo/GNUstep/Defaults/sogod.plist
@@ -112,5 +152,47 @@ echo '    </dict>
 # Fix permissions
 chown sogo:sogo -R /var/lib/sogo/
 chmod 600 /var/lib/sogo/GNUstep/Defaults/sogod.plist
+
+# Prevent theme switching
+sed -i \
+  -e 's/eaf5e9/E3F2FD/g' \
+  -e 's/cbe5c8/BBDEFB/g' \
+  -e 's/aad6a5/90CAF9/g' \
+  -e 's/88c781/64B5F6/g' \
+  -e 's/66b86a/42A5F5/g' \
+  -e 's/56b04c/2196F3/g' \
+  -e 's/4da143/1E88E5/g' \
+  -e 's/388e3c/1976D2/g' \
+  -e 's/367d2e/1565C0/g' \
+  -e 's/225e1b/0D47A1/g' \
+  -e 's/fafafa/82B1FF/g' \
+  -e 's/69f0ae/448AFF/g' \
+  -e 's/00e676/2979ff/g' \
+  -e 's/00c853/2962ff/g'  \
+  /usr/lib/GNUstep/SOGo/WebServerResources/js/Common/Common.app.js \
+  /usr/lib/GNUstep/SOGo/WebServerResources/js/Common.js
+
+sed -i \
+  -e 's/default: "900"/default: "700"/g' \
+  -e 's/default: "500"/default: "700"/g' \
+  -e 's/"hue-1": "400"/"hue-1": "500"/g' \
+  -e 's/"hue-1": "A100"/"hue-1": "500"/g' \
+  -e 's/"hue-2": "800"/"hue-2": "700"/g' \
+  -e 's/"hue-2": "300"/"hue-2": "700"/g' \
+  -e 's/"hue-3": "A700"/"hue-3": "A200"/' \
+  -e 's/default:"900"/default:"700"/g' \
+  -e 's/default:"500"/default:"700"/g' \
+  -e 's/"hue-1":"400"/"hue-1":"500"/g' \
+  -e 's/"hue-1":"A100"/"hue-1":"500"/g' \
+  -e 's/"hue-2":"800"/"hue-2":"700"/g' \
+  -e 's/"hue-2":"300"/"hue-2":"700"/g' \
+  -e 's/"hue-3":"A700"/"hue-3":"A200"/' \
+  /usr/lib/GNUstep/SOGo/WebServerResources/js/Common/Common.app.js \
+  /usr/lib/GNUstep/SOGo/WebServerResources/js/Common.js
+
+# Patch ACLs (comment this out to enable any or authenticated targets for ACL)
+if patch -sfN --dry-run /usr/lib/GNUstep/SOGo/Templates/UIxAclEditor.wox < /acl.diff > /dev/null; then
+  patch /usr/lib/GNUstep/SOGo/Templates/UIxAclEditor.wox < /acl.diff;
+fi
 
 exec gosu sogo /usr/sbin/sogod

@@ -137,6 +137,47 @@ $tfa_data = get_tfa();
           </div>
         </div>
     </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Rspamd UI</h3>
+      </div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-9">
+          <form class="form-horizontal" autocapitalize="none" data-id="admin" autocorrect="off" role="form" method="post">
+            <div class="form-group">
+              <div class="col-sm-offset-3 col-sm-9">
+                <label>
+                  <a href="/rspamd/" target="_blank"><span class="glyphicon glyphicon-new-window" aria-hidden="true"></span> Rspamd UI</a>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-3" for="rspamd_ui_pass"><?=$lang['admin']['password'];?>:</label>
+              <div class="col-sm-9">
+              <input type="password" class="form-control" name="rspamd_ui_pass" id="rspamd_ui_pass" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-3" for="rspamd_ui_pass2"><?=$lang['admin']['password_repeat'];?>:</label>
+              <div class="col-sm-9">
+              <input type="password" class="form-control" name="rspamd_ui_pass2" id="rspamd_ui_pass2" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-3 col-sm-9">
+                <button type="submit" class="btn btn-default" id="rspamd_ui" name="rspamd_ui" href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+              </div>
+            </div>
+          </form>
+          </div>
+          <div class="col-sm-3">
+            <img class="img-responsive" src="/img/rspamd_logo.png" alt="Rspamd UI" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div role="tabpanel" class="tab-pane" id="tab-config">
@@ -148,6 +189,7 @@ $tfa_data = get_tfa();
         <a href="#f2bparams" class="list-group-item"><?=$lang['admin']['f2b_parameters'];?></a>
         <a href="#relayhosts" class="list-group-item">Relayhosts</a>
         <a href="#quarantine" class="list-group-item"><?=$lang['admin']['quarantine'];?></a>
+        <a href="#rsettings" class="list-group-item">Rspamd settings map</a>
         <a href="#customize" class="list-group-item"><?=$lang['admin']['customize'];?></a>
         <a href="#top" class="list-group-item" style="border-top:1px dashed #dadada">↸ <?=$lang['admin']['to_top'];?></a>
       </div>
@@ -166,6 +208,8 @@ $tfa_data = get_tfa();
         <?php
         foreach(mailbox('get', 'domains') as $domain) {
             if (!empty($dkim = dkim('details', $domain))) {
+              $dkim_domains[] = $domain;
+              ($GLOBALS['SHOW_DKIM_PRIV_KEYS'] === true) ?: $dkim['privkey'] = base64_encode('Please set $SHOW_DKIM_PRIV_KEYS to true to show DKIM private keys.');
           ?>
             <div class="row">
               <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" /></div>
@@ -187,7 +231,7 @@ $tfa_data = get_tfa();
           else {
           ?>
           <div class="row">
-              <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" disabled /></div>
+              <div class="col-md-1"><input class="dkim_missing" type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" disabled /></div>
             <div class="col-md-3">
               <p>Domain: <strong><?=htmlspecialchars($domain);?></strong><br /><span class="label label-danger"><?=$lang['admin']['dkim_key_missing'];?></span></p>
             </div>
@@ -198,6 +242,8 @@ $tfa_data = get_tfa();
           }
           foreach(mailbox('get', 'alias_domains', $domain) as $alias_domain) {
             if (!empty($dkim = dkim('details', $alias_domain))) {
+              $dkim_domains[] = $alias_domain;
+              ($GLOBALS['SHOW_DKIM_PRIV_KEYS'] === true) ?: $dkim['privkey'] = base64_encode('Please set $SHOW_DKIM_PRIV_KEYS to true to show DKIM private keys.');
             ?>
               <div class="row">
               <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$alias_domain;?>" /></div>
@@ -219,7 +265,7 @@ $tfa_data = get_tfa();
             else {
             ?>
             <div class="row">
-              <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" disabled /></div>
+              <div class="col-md-1"><input class="dkim_missing" type="checkbox" data-id="dkim" name="multi_select" value="<?=$alias_domain;?>" disabled /></div>
               <div class="col-md-2 col-md-offset-1">
                 <p><small>↳ Alias-Domain: <strong><?=htmlspecialchars($alias_domain);?></strong><br /></small><span class="label label-danger"><?=$lang['admin']['dkim_key_missing'];?></span></p>
               </div>
@@ -232,6 +278,8 @@ $tfa_data = get_tfa();
         }
         foreach(dkim('blind') as $blind) {
           if (!empty($dkim = dkim('details', $blind))) {
+            $dkim_domains[] = $blind;
+            ($GLOBALS['SHOW_DKIM_PRIV_KEYS'] === true) ?: $dkim['privkey'] = base64_encode('Please set $SHOW_DKIM_PRIV_KEYS to true to show DKIM private keys.');
           ?>
             <div class="row">
               <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$blind;?>" /></div>
@@ -256,40 +304,90 @@ $tfa_data = get_tfa();
         <legend style="margin-top:40px"><?=$lang['admin']['dkim_add_key'];?></legend>
         <form class="form" data-id="dkim" role="form" method="post">
           <div class="form-group">
-            <label for="domain">Domain</label>
-            <input class="form-control" id="domain" name="domain" placeholder="example.org" required>
+            <label for="domain"><?=$lang['admin']['domain_s'];?></label>
+            <input class="form-control input-sm" id="dkim_add_domains" name="domains" placeholder="example.org, example.com" required>
+            <small>↪ <a href="#" id="dkim_missing_keys"><?=$lang['admin']['dkim_domains_wo_keys'];?></a></small>
           </div>
           <div class="form-group">
             <label for="domain">Selector</label>
-            <input class="form-control" id="dkim_selector" name="dkim_selector" value="dkim" required>
+            <input class="form-control input-sm" id="dkim_selector" name="dkim_selector" value="dkim" required>
           </div>
           <div class="form-group">
-            <select data-width="200px" class="form-control" id="key_size" name="key_size" title="<?=$lang['admin']['dkim_key_length'];?>" required>
+            <select data-width="200px" data-style="btn btn-default btn-sm" class="form-control" id="key_size" name="key_size" title="<?=$lang['admin']['dkim_key_length'];?>" required>
               <option data-subtext="bits">1024</option>
               <option data-subtext="bits">2048</option>
             </select>
           </div>
-          <button class="btn btn-default" id="add_item" data-id="dkim" data-api-url='add/dkim' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['add'];?></button>
+          <button class="btn btn-sm btn-default" id="add_item" data-id="dkim" data-api-url='add/dkim' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['add'];?></button>
         </form>
 
-        <legend data-target="#import_dkim" style="margin-top:40px;cursor:pointer" id="import_dkim_legend" unselectable="on" data-toggle="collapse"><span id="import_dkim_arrow" class="rotate glyphicon glyphicon-menu-down"></span> <?=$lang['admin']['import_private_key'];?></legend>
+        <legend data-target="#import_dkim" style="margin-top:40px;cursor:pointer" id="import_dkim_legend" unselectable="on" data-toggle="collapse">
+          <span id="import_dkim_arrow" style="font-size:12px" class="rotate glyphicon glyphicon-menu-down"></span> <?=$lang['admin']['import_private_key'];?>
+        </legend>
         <div id="import_dkim" class="collapse">
         <form class="form" data-id="dkim_import" role="form" method="post">
           <div class="form-group">
             <label for="domain">Domain:</label>
-            <input class="form-control" id="domain" name="domain" placeholder="example.org" required>
+            <input class="form-control input-sm" id="domain" name="domain" placeholder="example.org" required>
           </div>
           <div class="form-group">
             <label for="domain">Selector:</label>
-            <input class="form-control" id="dkim_selector" name="dkim_selector" value="dkim" required>
+            <input class="form-control input-sm" id="dkim_selector" name="dkim_selector" value="dkim" required>
           </div>
           <div class="form-group">
             <label for="private_key_file"><?=$lang['admin']['private_key'];?>:</label>
-            <textarea class="form-control" rows="5" name="private_key_file" id="private_key_file" required placeholder="-----BEGIN RSA KEY-----"></textarea>
+            <textarea class="form-control input-sm" rows="10" name="private_key_file" id="private_key_file" required placeholder="-----BEGIN RSA KEY-----"></textarea>
           </div>
-          <button class="btn btn-default" id="add_item" data-id="dkim_import" data-api-url='add/dkim_import' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['import'];?></button>
+          <button class="btn btn-sm btn-default" id="add_item" data-id="dkim_import" data-api-url='add/dkim_import' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['import'];?></button>
         </form>
         </div>
+
+        <legend data-target="#duplicate_dkim" style="margin-top:40px;cursor:pointer" id="duplicate_dkim_legend" unselectable="on" data-toggle="collapse">
+          <span id="duplicate_dkim_arrow" style="font-size:12px" class="rotate glyphicon glyphicon-menu-down"></span> <?=$lang['admin']['duplicate_dkim'];?>
+        </legend>
+        <div id="duplicate_dkim" class="collapse">
+        <form class="form-horizontal" data-id="dkim_duplicate" role="form" method="post">
+          <div class="form-group">
+            <label class="control-label col-sm-2" for="from_domain"><?=$lang['admin']['dkim_from'];?>:</label>
+            <div class="col-sm-10">
+            <select data-style="btn btn-default btn-sm"
+              data-live-search="true"
+              data-id="dkim_duplicate"
+              title="<?=$lang['admin']['dkim_from_title'];?>"
+              name="from_domain" id="from_domain" class="full-width-select form-control" required>
+              <?php
+              foreach ($dkim_domains as $dkim) {
+              ?>
+              <option value="<?=$dkim;?>"><?=$dkim;?></option>
+              <?php
+              }
+              ?>
+            </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="control-label col-sm-2" for="to_domain"><?=$lang['admin']['dkim_to'];?>:</label>
+            <div class="col-sm-10">
+            <select
+              data-live-search="true"
+              data-style="btn btn-default btn-sm"
+              data-id="dkim_duplicate"
+              title="<?=$lang['admin']['dkim_to_title'];?>"
+              name="to_domain" id="to_domain" class="full-width-select form-control" multiple required>
+              <?php
+              foreach (array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains')) as $domain) {
+              ?>
+              <option value="<?=$domain;?>"><?=$domain;?></option>
+              <?php
+              }
+              ?>
+            </select>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-default" id="add_item" data-id="dkim_duplicate" data-api-url='add/dkim_duplicate' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-duplicate"></span> <?=$lang['admin']['duplicate'];?></button>
+        </form>
+        </div>
+
       </div>
     </div>
 
@@ -374,8 +472,46 @@ $tfa_data = get_tfa();
             <label for="blacklist"><?=$lang['admin']['f2b_blacklist'];?>:</label>
             <textarea class="form-control" id="blacklist" name="blacklist" rows="5"><?=$f2b_data['blacklist'];?></textarea>
           </div>
-          <button class="btn btn-default" id="add_item" data-id="f2b" data-api-url='edit/fail2ban' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+          <div class="btn-group">
+            <button class="btn btn-default" id="edit_selected" data-item="self" data-id="f2b" data-api-url='edit/fail2ban' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+            <a href="#" role="button" class="btn btn-default" data-toggle="modal" data-container="netfilter-mailcow" data-target="#RestartContainer"><span class="glyphicon glyphicon-refresh"></span> <?= $lang['header']['restart_netfilter']; ?></a>
+          </div>
         </form>
+        <hr>
+        <p class="help-block"><?=$lang['admin']['ban_list_info'];?></p>
+        <?php
+        if (empty($f2b_data['active_bans']) && empty($f2b_data['perm_bans'])):
+        ?>
+        <i><?=$lang['admin']['no_active_bans'];?></i>
+        <?php
+        endif;
+        foreach ($f2b_data['active_bans'] as $active_bans):
+        ?>
+        <p><span class="label label-info" style="padding:4px;font-size:85%;"><span class="glyphicon glyphicon-filter"></span> <?=$active_bans['network'];?> (<?=$active_bans['banned_until'];?>) - 
+          <?php
+          if ($active_bans['queued_for_unban'] == 0):
+          ?>
+          <a id="edit_selected" data-item="<?=$active_bans['network'];?>" data-id="f2b-quick" data-api-url='edit/fail2ban' data-api-attr='{"action":"unban"}' href="#">[<?=$lang['admin']['queue_unban'];?>]</a>
+          <a id="edit_selected" data-item="<?=$active_bans['network'];?>" data-id="f2b-quick" data-api-url='edit/fail2ban' data-api-attr='{"action":"whitelist"}' href="#">[whitelist]</a>
+          <a id="edit_selected" data-item="<?=$active_bans['network'];?>" data-id="f2b-quick" data-api-url='edit/fail2ban' data-api-attr='{"action":"blacklist"}' href="#">[blacklist]</a>
+          <?php
+          else:
+          ?>
+          <i><?=$lang['admin']['unban_pending'];?></i>
+          <?php
+          endif;
+          ?>
+        </span></p>
+        <?php
+        endforeach;
+        foreach ($f2b_data['perm_bans'] as $perm_bans):
+        ?>
+        <p>
+        <span class="label label-danger" style="padding:4px;font-size:85%;"><span class="glyphicon glyphicon-filter"></span> <?=$perm_bans?></span>
+        </p>
+        <?php
+        endforeach;
+        ?>
       </div>
     </div>
 
@@ -429,13 +565,13 @@ $tfa_data = get_tfa();
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="retention_size"><?=$lang['admin']['quarantine_retention_size'];?></label>
-                <input type="number" class="form-control" id="retention_size" name="retention_size" value="<?=$q_data['retention_size'];?>" required>
+                <input type="number" class="form-control" id="retention_size" name="retention_size" value="<?=$q_data['retention_size'];?>" placeholder="0" required>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="max_size"><?=$lang['admin']['quarantine_max_size'];?></label>
-                <input type="number" class="form-control" id="max_size" name="max_size" value="<?=$q_data['max_size'];?>" required>
+                <input type="number" class="form-control" id="max_size" name="max_size" value="<?=$q_data['max_size'];?>" placeholder="0" required>
               </div>
             </div>
           </div>
@@ -452,6 +588,89 @@ $tfa_data = get_tfa();
             </select>
           </div>
           <button class="btn btn-default" id="edit_selected" data-item="self" data-id="quarantine" data-api-url='edit/quarantine' data-api-attr='{"action":"settings"}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+        </form>
+      </div>
+    </div>
+
+    <span class="anchor" id="rsettings"></span>
+    <div class="panel panel-default">
+      <div class="panel-heading">Rspamd settings map</div>
+      <div class="panel-body">
+      <legend>Active settings map</legend>
+      <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control" rows="20" id="settings_map" name="settings_map" readonly><?=file_get_contents('http://nginx:8081/settings.php');?></textarea>
+      <hr>
+      <?php $rsettings = rsettings('get'); ?>
+        <form class="form" data-id="rsettings" role="form" method="post">
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="list-group">
+                <?php
+                if (empty($rsettings)):
+                ?>
+                  <span class="list-group-item"><em><?=$lang['admin']['rsetting_none'];?></em></span>
+                <?php
+                else:
+                foreach ($rsettings as $rsetting):
+                  $rsetting_details = rsettings('details', $rsetting['id']);
+                ?>
+                  <a href="#<?=$rsetting_details['id'];?>" class="list-group-item list-group-item-<?=($rsetting_details['active_int'] == '1') ? 'success' : ''; ?>" data-dont-remember="1" data-toggle="tab"><?=$rsetting_details['desc'];?> (ID #<?=$rsetting['id'];?>)</a>
+                <?php
+                endforeach;
+                endif;
+                ?>
+                  <a href="#" class="list-group-item list-group-item-default"
+                    data-id="add_domain_admin"
+                    data-toggle="modal"
+                    data-dont-remember="1"
+                    data-target="#addRsettingModal"
+                    data-toggle="tab"><?=$lang['admin']['rsetting_add_rule'];?></a>
+              </div>
+            </div>
+            <div class="col-sm-9">
+              <div class="tab-content">
+                <?php
+                if (empty($rsettings)):
+                ?>
+                <div id="none" class="tab-pane active">
+                  <p class="help-block"><?=$lang['admin']['rsetting_none'];?></p>
+                </div>
+                <?php
+                else:
+                ?>
+                <div id="none" class="tab-pane active">
+                  <p class="help-block"><?=$lang['admin']['rsetting_no_selection'];?></p>
+                </div>
+                <?php
+                foreach ($rsettings as $rsetting):
+                  $rsetting_details = rsettings('details', $rsetting['id']);
+                ?>
+                <div id="<?=$rsetting_details['id'];?>" class="tab-pane">
+                  <form class="form" data-id="rsettings" role="form" method="post">
+                    <input type="hidden" name="active" value="0">
+                    <div class="form-group">
+                      <label for="desc"><?=$lang['admin']['rsetting_desc'];?>:</label>
+                      <input type="text" class="form-control" id="desc" name="desc" value="<?=$rsetting_details['desc'];?>">
+                    </div>
+                    <div class="form-group">
+                      <label for="content"><?=$lang['admin']['rsetting_content'];?>:</label>
+                      <textarea class="form-control" id="content" name="content" rows="10"><?=$rsetting_details['content'];?></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>
+                        <input type="checkbox" name="active" value="1" <?=($rsetting_details['active_int'] == 1) ? 'checked' : null;?>> <?=$lang['admin']['active'];?>
+                      </label>
+                    </div>
+                    <button class="btn btn-default" id="edit_selected" data-item="<?=$rsetting_details['id'];?>" data-id="rsettings" data-api-url='edit/rsetting' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
+                    <button class="btn btn-danger" id="delete_selected" data-item="<?=$rsetting_details['id'];?>" data-id="rsettings" data-api-url="delete/rsetting" data-api-attr='{}' href="#"><?=$lang['admin']['remove'];?></button>
+                  </form>
+                </div>
+                <?php
+                endforeach;
+                endif;
+                ?>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
     </div>
@@ -494,7 +713,7 @@ $tfa_data = get_tfa();
         <legend><?=$lang['admin']['app_links'];?></legend>
         <p class="help-block"><?=$lang['admin']['merged_vars_hint'];?></p>
         <form class="form-inline" data-id="app_links" role="form" method="post">
-          <table class="table table-condensed" style="width:1%;white-space: nowrap;" id="app_link_table">
+          <table class="table table-condensed" style="white-space: nowrap;" id="app_link_table">
             <tr>
               <th><?=$lang['admin']['app_name'];?></th>
               <th><?=$lang['admin']['link'];?></th>

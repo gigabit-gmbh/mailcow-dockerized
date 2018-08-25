@@ -18,11 +18,13 @@ RUN apk add --update \
   redis \
   perl \
   perl-io-socket-ssl \
+  perl-io-socket-inet6 \
   perl-socket \
   perl-socket6 \
   perl-mime-lite \
   perl-term-readkey \
   tini \
+  tzdata \
   && curl https://raw.githubusercontent.com/mludvig/smtp-cli/v3.9/smtp-cli -o /smtp-cli \
   && chmod +x smtp-cli
 

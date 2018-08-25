@@ -11,6 +11,52 @@ export LC_ALL=C
 DATE=$(date +%Y-%m-%d_%H_%M_%S)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+docker_garbage() {
+  echo -e "\e[32mCollecting garbage...\e[0m"
+  IMGS_TO_DELETE=()
+  for container in $(grep -oP "image: \Kmailcow.+" docker-compose.yml); do
+    REPOSITORY=${container/:*}
+    TAG=${container/*:}
+    V_MAIN=${container/*.}
+    V_SUB=${container/*.}
+    EXISTING_TAGS=$(docker images | grep ${REPOSITORY} | awk '{ print $2 }')
+    for existing_tag in ${EXISTING_TAGS[@]}; do
+      V_MAIN_EXISTING=${existing_tag/*.}
+      V_SUB_EXISTING=${existing_tag/*.}
+      # Not an integer
+      [[ ! $V_MAIN_EXISTING =~ ^[0-9]+$ ]] && continue
+      [[ ! $V_SUB_EXISTING =~ ^[0-9]+$ ]] && continue
+
+      if [[ $V_MAIN_EXISTING == "latest" ]]; then
+        echo "Found deprecated label \"latest\" for repository $REPOSITORY, it should be deleted."
+        IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
+      elif [[ $V_MAIN_EXISTING -lt $V_MAIN ]]; then
+        echo "Found tag $existing_tag for $REPOSITORY, which is older than the current tag $TAG and should be deleted."
+        IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
+      elif [[ $V_SUB_EXISTING -lt $V_SUB ]]; then
+        echo "Found tag $existing_tag for $REPOSITORY, which is older than the current tag $TAG and should be deleted."
+        IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
+      fi
+    done
+  done
+
+  if [[ ! -z ${IMGS_TO_DELETE[*]} ]]; then
+    echo "Run the following command to delete unused image tags:"
+    echo
+    echo "    docker rmi ${IMGS_TO_DELETE[*]}"
+    echo
+    read -r -p "Do you want to delete old image tags right now? [y/N] " response
+    if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+      docker rmi ${IMGS_TO_DELETE[*]}
+    else
+      echo "OK, skipped."
+    fi
+  fi
+  echo -e "\e[32mFurther cleanup...\e[0m"
+  echo "If you want to cleanup further garbage collected by Docker, please make sure all containers are up and running before cleaning your system by executing \"docker system prune\""
+}
+
+
 while (($#)); do
   case "${1}" in
     --check|-c)
@@ -27,10 +73,30 @@ while (($#)); do
     --ours)
       MERGE_STRATEGY=ours
     ;;
+    --gc)
+      docker_garbage
+      exit 0
+    ;;
+    --help|-h)
+    echo './update.sh [-c|--check, --ours, --gc, -h|--help]
+
+  -c|--check   -   Check for updates and exit (exit codes => 0: update available, 3: no updates)
+  --ours       -   Use merge strategy "ours" to solve conflicts in favor of non-mailcow code (local changes)
+  --gc         -   Run garbage collector to delete old image tags
+'
+    exit 1
   esac
+  shift
 done
 
 [[ ! -f mailcow.conf ]] && { echo "mailcow.conf is missing"; exit 1;}
+source mailcow.conf
+DOTS=${MAILCOW_HOSTNAME//[^.]};
+if [ ${#DOTS} -lt 2 ]; then
+  echo "MAILCOW_HOSTNAME (${MAILCOW_HOSTNAME}) is not a FQDN!"
+  echo "Please change it to a FQDN and run docker-compose down followed by docker-compose up -d"
+  exit 1
+fi
 
 if grep --help 2>&1 | head -n 1 | grep -q -i "busybox"; then echo "BusybBox grep detected, please install gnu grep, \"apk add --no-cache --upgrade grep\""; exit 1; fi
 if cp --help 2>&1 | head -n 1 | grep -q -i "busybox"; then echo "BusybBox cp detected, please install coreutils, \"apk add --no-cache --upgrade coreutils\""; exit 1; fi
@@ -47,9 +113,12 @@ CONFIG_ARRAY=(
   "IPV6_NETWORK"
   "LOG_LINES"
   "SNAT_TO_SOURCE"
+  "SNAT6_TO_SOURCE"
   "SYSCTL_IPV6_DISABLED"
   "COMPOSE_PROJECT_NAME"
   "SQL_PORT"
+  "API_KEY"
+  "API_ALLOW_FROM"
 )
 
 sed -i '$a\' mailcow.conf
@@ -107,11 +176,29 @@ for option in ${CONFIG_ARRAY[@]}; do
       echo '# Bind SQL to 127.0.0.1 on port 13306' >> mailcow.conf
       echo "SQL_PORT=127.0.0.1:13306" >> mailcow.conf
     fi
+  elif [[ ${option} == "API_KEY" ]]; then
+    if ! grep -q ${option} mailcow.conf; then
+      echo "Adding new option \"${option}\" to mailcow.conf"
+      echo '# Create or override API key for web UI' >> mailcow.conf
+      echo "#API_KEY=" >> mailcow.conf
+    fi
+  elif [[ ${option} == "API_ALLOW_FROM" ]]; then
+    if ! grep -q ${option} mailcow.conf; then
+      echo "Adding new option \"${option}\" to mailcow.conf"
+      echo '# Must be set for API_KEY to be active' >> mailcow.conf
+      echo "#API_ALLOW_FROM=" >> mailcow.conf
+    fi
   elif [[ ${option} == "SNAT_TO_SOURCE" ]]; then
     if ! grep -q ${option} mailcow.conf; then
       echo "Adding new option \"${option}\" to mailcow.conf"
-      echo '# Use this IP for outgoing connections (SNAT)' >> mailcow.conf
+      echo '# Use this IPv4 for outgoing connections (SNAT)' >> mailcow.conf
       echo "#SNAT_TO_SOURCE=" >> mailcow.conf
+    fi
+  elif [[ ${option} == "SNAT6_TO_SOURCE" ]]; then
+    if ! grep -q ${option} mailcow.conf; then
+      echo "Adding new option \"${option}\" to mailcow.conf"
+      echo '# Use this IPv6 for outgoing connections (SNAT)' >> mailcow.conf
+      echo "#SNAT6_TO_SOURCE=" >> mailcow.conf
     fi
   elif ! grep -q ${option} mailcow.conf; then
     echo "Adding new option \"${option}\" to mailcow.conf"
@@ -215,6 +302,19 @@ docker-compose pull
 [[ ! -d data/assets/ssl ]] && mkdir -p data/assets/ssl
 cp -n data/assets/ssl-example/*.pem data/assets/ssl/
 
+echo -e "Checking IPv6 settings... "
+if grep -q 'SYSCTL_IPV6_DISABLED=1' mailcow.conf; then
+  echo
+  echo '!! IMPORTANT !!'
+  echo
+  echo 'SYSCTL_IPV6_DISABLED was removed due to complications. IPv6 can be disabled by editing "docker-compose.yml" and setting "enabled_ipv6: true" to "enabled_ipv6: false".'
+  echo 'This setting will only be active after a complete shutdown of mailcow by running "docker-compose down" followed by "docker-compose up -d".'
+  echo
+  echo '!! IMPORTANT !!'
+  echo
+  read -p "Press any key to continue..." < /dev/tty
+fi
+
 echo -e "Fixing project name... "
 sed -i 's#COMPOSEPROJECT_NAME#COMPOSE_PROJECT_NAME#g' mailcow.conf
 sed -i '/COMPOSE_PROJECT_NAME=/s/-//g' mailcow.conf
@@ -235,47 +335,7 @@ sleep 2
 docker-compose up -d --remove-orphans
 
 echo -e "\e[32mCollecting garbage...\e[0m"
-IMGS_TO_DELETE=()
-for container in $(grep -oP "image: \Kmailcow.+" docker-compose.yml); do
-  REPOSITORY=${container/:*}
-  TAG=${container/*:}
-  V_MAIN=${container/*.}
-  V_SUB=${container/*.}
-  EXISTING_TAGS=$(docker images | grep ${REPOSITORY} | awk '{ print $2 }')
-  for existing_tag in ${EXISTING_TAGS[@]}; do
-    V_MAIN_EXISTING=${existing_tag/*.}
-    V_SUB_EXISTING=${existing_tag/*.}
-    # Not an integer
-    [[ ! $V_MAIN_EXISTING =~ ^[0-9]+$ ]] && continue
-    [[ ! $V_SUB_EXISTING =~ ^[0-9]+$ ]] && continue
-
-    if [[ $V_MAIN_EXISTING == "latest" ]]; then
-      echo "Found deprecated label \"latest\" for repository $REPOSITORY, it should be deleted."
-      IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
-    elif [[ $V_MAIN_EXISTING -lt $V_MAIN ]]; then
-      echo "Found tag $existing_tag for $REPOSITORY, which is older than the current tag $TAG and should be deleted."
-      IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
-    elif [[ $V_SUB_EXISTING -lt $V_SUB ]]; then
-      echo "Found tag $existing_tag for $REPOSITORY, which is older than the current tag $TAG and should be deleted."
-      IMGS_TO_DELETE+=($REPOSITORY:$existing_tag)
-    fi
-  done
-done
-
-if [[ ! -z ${IMGS_TO_DELETE[*]} ]]; then
-  echo "Run the following command to delete unused image tags:"
-  echo
-  echo "    docker rmi ${IMGS_TO_DELETE[*]}"
-  echo
-  read -r -p "Do you want to delete old image tags right now? [y/N] " response
-  if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
-    docker rmi ${IMGS_TO_DELETE[*]}
-  else
-    echo "OK, skipped."
-  fi
-fi
-echo -e "\e[32mFurther cleanup...\e[0m"
-echo "If you want to cleanup further garbage collected by Docker, please make sure all containers are up and running before cleaning your system by executing \"docker system prune\""
+docker_garbage
 
 #echo "In case you encounter any problem, hard-reset to a state before updating mailcow:"
 #echo

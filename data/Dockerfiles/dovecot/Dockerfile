@@ -3,8 +3,8 @@ LABEL maintainer "Andre Peters <andre.peters@servercow.de>"
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL C
-ENV DOVECOT_VERSION 2.3.1
-ENV PIGEONHOLE_VERSION 0.5.1
+ENV DOVECOT_VERSION 2.3.2.1
+ENV PIGEONHOLE_VERSION 0.5.2
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
   automake \
@@ -51,19 +51,25 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
   libterm-readkey-perl \
   libtest-pod-perl \
   libtest-simple-perl \
+  libtry-tiny-perl \
   libunicode-string-perl \
   libproc-processtable-perl \
+  libtest-nowarnings-perl \
+  libtest-deep-perl \
+  libtest-warn-perl \
+  libregexp-common-perl \
   liburi-perl \
   lzma-dev \
   make \
+  mysql-client \
   procps \
   supervisor \
   cron \
+  redis-server \
   syslog-ng \
   syslog-ng-core \
   syslog-ng-mod-redis \
   && rm -rf /var/lib/apt/lists/*
-
 
 RUN curl https://www.dovecot.org/releases/2.3/dovecot-$DOVECOT_VERSION.tar.gz | tar xvz  \
   && cd dovecot-$DOVECOT_VERSION \
@@ -84,7 +90,9 @@ RUN curl https://www.dovecot.org/releases/2.3/dovecot-$DOVECOT_VERSION.tar.gz | 
 RUN cpanm Data::Uniqid Mail::IMAPClient String::Util
 RUN echo '* * * * *   root   /usr/local/bin/imapsync_cron.pl' > /etc/cron.d/imapsync
 RUN echo '30 3 * * *   vmail  /usr/local/bin/doveadm quota recalc -A' > /etc/cron.d/dovecot-sync
+RUN echo '* * * * *   root  /usr/local/bin/trim_logs.sh >> /dev/stdout 2>&1' > /etc/cron.d/trim_logs
 
+COPY trim_logs.sh /usr/local/bin/trim_logs.sh
 COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 COPY imapsync /usr/local/bin/imapsync
 COPY postlogin.sh /usr/local/bin/postlogin.sh
@@ -100,7 +108,8 @@ RUN chmod +x /usr/local/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/local/lib/dovecot/sieve/rspamd-pipe-spam \
   /usr/local/bin/imapsync_cron.pl \
   /usr/local/bin/postlogin.sh \
-  /usr/local/bin/imapsync
+  /usr/local/bin/imapsync \
+  /usr/local/bin/trim_logs.sh
 
 RUN groupadd -g 5000 vmail \
   && groupadd -g 401 dovecot \
@@ -110,7 +119,7 @@ RUN groupadd -g 5000 vmail \
   && useradd -c "Dovecot login user" -d /dev/null -u 402 -g dovenull -s /bin/false dovenull
 
 RUN touch /etc/default/locale
-RUN apt-get purge -y build-essential automake autotools-dev \
+RUN apt-get purge -y build-essential automake autotools-dev default-libmysqlclient-dev libbz2-dev libcurl4-openssl-dev libexpat1-dev liblz-dev liblz4-dev liblzma-dev libpam-dev libssl-dev lzma-dev \
   && apt-get autoremove --purge -y
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
