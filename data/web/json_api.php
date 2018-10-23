@@ -144,6 +144,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           case "domain-admin":
             process_add_return(domain_admin('add', $attr));
           break;
+          case "admin":
+            process_add_return(admin('add', $attr));
+          break;
           case "syncjob":
             process_add_return(mailbox('add', 'syncjob', $attr));
           break;
@@ -152,6 +155,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           break;
           case "recipient_map":
             process_add_return(recipient_map('add', $attr));
+          break;
+          case "tls-policy-map":
+            process_add_return(tls_policy_maps('add', $attr));
           break;
         }
       break;
@@ -164,7 +170,7 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
             switch ($object) {
               case "actions":
                 $curl = curl_init();
-                curl_setopt($curl, CURLOPT_UNIX_SOCKET_PATH, '/rspamd-sock/rspamd.sock');
+                curl_setopt($curl, CURLOPT_UNIX_SOCKET_PATH, '/var/lib/rspamd/rspamd.sock');
                 curl_setopt($curl, CURLOPT_URL,"http://rspamd/stat");
                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
                 $data = curl_exec($curl);
@@ -662,6 +668,31 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
               break;
             }
           break;
+          case "tls-policy-map":
+            switch ($object) {
+              case "all":
+                $tls_policy_maps_items = tls_policy_maps('get');
+                if (!empty($tls_policy_maps_items)) {
+                  foreach ($tls_policy_maps_items as $tls_policy_maps_item) {
+                    if ($details = tls_policy_maps('details', $tls_policy_maps_item)) {
+                      $data[] = $details;
+                    }
+                    else {
+                      continue;
+                    }
+                  }
+                }
+                process_get_return($data);
+              break;
+              default:
+                $data = tls_policy_maps('details', $object);
+                if (!empty($data)) {
+                  $data[] = $details;
+                }
+                process_get_return($data);
+              break;
+            }
+          break;
           case "policy_wl_mailbox":
             switch ($object) {
               default:
@@ -829,6 +860,31 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
               break;
             }
           break;
+          case "admin":
+            switch ($object) {
+              case "all":
+                $admins = admin('get');
+                if (!empty($admins)) {
+                  foreach ($admins as $admin) {
+                    if ($details = admin('details', $admin)) {
+                      $data[] = $details;
+                    }
+                    else {
+                      continue;
+                    }
+                  }
+                  process_get_return($data);
+                }
+                else {
+                  echo '{}';
+                }
+              break;
+
+              default:
+                process_get_return(admin('details', $object));
+              break;
+            }
+          break;
           case "u2f-registration":
             header('Content-Type: application/javascript');
             if (($_SESSION["mailcow_cc_role"] == "admin" || $_SESSION["mailcow_cc_role"] == "domainadmin") && $_SESSION["mailcow_cc_username"] == $object) {
@@ -863,6 +919,14 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
             }
             else {
               return;
+            }
+          break;
+          case "dkim":
+            switch ($object) {
+              default:
+                $data = dkim('details', $object);
+                  process_get_return($data);
+                  break;
             }
           break;
           default:
@@ -919,6 +983,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           case "recipient_map":
             process_delete_return(recipient_map('delete', array('id' => $items)));
           break;
+          case "tls-policy-map":
+            process_delete_return(tls_policy_maps('delete', array('id' => $items)));
+          break;
           case "fwdhost":
             process_delete_return(fwdhost('delete', array('forwardinghost' => $items)));
           break;
@@ -952,6 +1019,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           break;
           case "domain-admin":
             process_delete_return(domain_admin('delete', array('username' => $items)));
+          break;
+          case "admin":
+            process_delete_return(admin('delete', array('username' => $items)));
           break;
         }
       break;
@@ -990,6 +1060,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           break;
           case "recipient_map":
             process_edit_return(recipient_map('edit', array_merge(array('id' => $items), $attr)));
+          break;
+          case "tls-policy-map":
+            process_edit_return(tls_policy_maps('edit', array_merge(array('id' => $items), $attr)));
           break;
           case "alias":
             process_edit_return(mailbox('edit', 'alias', array_merge(array('id' => $items), $attr)));
@@ -1039,6 +1112,12 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           case "rl-mbox":
             process_edit_return(ratelimit('edit', 'mailbox', array_merge(array('object' => $items), $attr)));
           break;
+          case "user-acl":
+            process_edit_return(acl('edit', 'user', array_merge(array('username' => $items), $attr)));
+          break;
+          case "da-acl":
+            process_edit_return(acl('edit', 'domainadmin', array_merge(array('username' => $items), $attr)));
+          break;
           case "alias-domain":
             process_edit_return(mailbox('edit', 'alias_domain', array_merge(array('alias_domain' => $items), $attr)));
           break;
@@ -1047,6 +1126,9 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
           break;
           case "domain-admin":
             process_edit_return(domain_admin('edit', array_merge(array('username' => $items), $attr)));
+          break;
+          case "admin":
+            process_edit_return(admin('edit', array_merge(array('username' => $items), $attr)));
           break;
           case "fwdhost":
             process_edit_return(fwdhost('edit', array_merge(array('fwdhost' => $items), $attr)));
@@ -1063,9 +1145,6 @@ if (isset($_SESSION['mailcow_cc_role']) || isset($_SESSION['pending_mailcow_cc_u
             }
             elseif ($_SESSION['mailcow_cc_role'] == "user") {
               process_edit_return(edit_user_account($attr));
-            }
-            elseif ($_SESSION['mailcow_cc_role'] == "admin") {
-              process_edit_return(edit_admin_account($attr));
             }
           break;
         }

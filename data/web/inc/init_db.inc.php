@@ -3,7 +3,7 @@ function init_db_schema() {
   try {
     global $pdo;
 
-    $db_version = "19082018_1004";
+    $db_version = "07102018_1502";
 
     $stmt = $pdo->query("SHOW TABLES LIKE 'versions'");
     $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -135,7 +135,6 @@ function init_db_schema() {
       ),
       "api" => array(
         "cols" => array(
-          "username" => "VARCHAR(255) NOT NULL",
           "api_key" => "VARCHAR(255) NOT NULL",
           "allow_from" => "VARCHAR(512) NOT NULL",
           "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
@@ -144,16 +143,8 @@ function init_db_schema() {
         ),
         "keys" => array(
           "primary" => array(
-            "" => array("username")
+            "" => array("api_key")
           ),
-          "fkey" => array(
-            "fk_username_api" => array(
-              "col" => "username",
-              "ref" => "admin.username",
-              "delete" => "CASCADE",
-              "update" => "CASCADE"
-            )
-          )
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
       ),
@@ -189,6 +180,26 @@ function init_db_schema() {
           "primary" => array(
             "" => array("domain")
           )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "tls_policy_override" => array(
+        "cols" => array(
+          "id" => "INT NOT NULL AUTO_INCREMENT",
+          "dest" => "VARCHAR(255) NOT NULL",
+          "policy" => "ENUM('none', 'may', 'encrypt', 'dane', 'dane-only', 'fingerprint', 'verify', 'secure') NOT NULL",
+          "parameters" => "VARCHAR(255) DEFAULT ''",
+          "created" => "DATETIME(0) NOT NULL DEFAULT NOW(0)",
+          "modified" => "DATETIME ON UPDATE CURRENT_TIMESTAMP",
+          "active" => "TINYINT(1) NOT NULL DEFAULT '1'"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("id")
+          ),
+          "unique" => array(
+            "dest" => array("dest")
+          ),
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
       ),
@@ -280,10 +291,7 @@ function init_db_schema() {
           "delimiter_action" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "eas_reset" => "TINYINT(1) NOT NULL DEFAULT '1'",
-          "filters" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "quarantine" => "TINYINT(1) NOT NULL DEFAULT '1'",
-          "bcc_maps" => "TINYINT(1) NOT NULL DEFAULT '1'",
-          "recipient_maps" => "TINYINT(1) NOT NULL DEFAULT '0'",
           ),
         "keys" => array(
           "primary" => array(
@@ -413,6 +421,24 @@ function init_db_schema() {
           ),
           "key" => array(
             "username" => array("username")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "da_acl" => array(
+        "cols" => array(
+          "username" => "VARCHAR(255) NOT NULL",
+          "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "quarantine" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "login_as" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "bcc_maps" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "filters" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "ratelimit" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "spam_policy" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("username")
           )
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
@@ -944,21 +970,49 @@ DELIMITER ;';
           WHERE `username` = :username");
       $stmt->execute(array(':tls_enforce_in' => $tls_options['tls_enforce_in'], ':tls_enforce_out' => $tls_options['tls_enforce_out'], ':username' => $tls_user));
     }
-    $_SESSION['return'][] = array(
-      'type' => 'success',
-      'log' => array(__FUNCTION__),
-      'msg' => 'db_init_complete'
-    );
-
-    // Fix user_acl
+    if (php_sapi_name() == "cli") {
+      echo "DB initialization completed" . PHP_EOL;
+    } else {
+      $_SESSION['return'][] = array(
+        'type' => 'success',
+        'log' => array(__FUNCTION__),
+        'msg' => 'db_init_complete'
+      );
+    }
+    // Fix ACL
     $stmt = $pdo->query("INSERT INTO `user_acl` (`username`) SELECT `username` FROM `mailbox` WHERE `kind` = '' AND NOT EXISTS (SELECT `username` FROM `user_acl`);");
+    $stmt = $pdo->query("INSERT INTO `da_acl` (`username`) SELECT DISTINCT `username` FROM `domain_admins` WHERE `username` != 'admin' AND NOT EXISTS (SELECT `username` FROM `da_acl`);");
+    // Fix domain_admins
+    $stmt = $pdo->query("DELETE FROM `domain_admins` WHERE `domain` = 'ALL';");
   }
   catch (PDOException $e) {
-    $_SESSION['return'][] = array(
-      'type' => 'danger',
-      'log' => array(__FUNCTION__),
-      'msg' => array('mysql_error', $e)
-    );
+    if (php_sapi_name() == "cli") {
+      echo "DB initialization failed: " . print_r($e, true) . PHP_EOL;
+    } else {
+      $_SESSION['return'][] = array(
+        'type' => 'danger',
+        'log' => array(__FUNCTION__),
+        'msg' => array('mysql_error', $e)
+      );
+    }
   }
 }
-?>
+if (php_sapi_name() == "cli") {
+  include '/web/inc/vars.inc.php';
+  $now = new DateTime();
+  $mins = $now->getOffset() / 60;
+  $sgn = ($mins < 0 ? -1 : 1);
+  $mins = abs($mins);
+  $hrs = floor($mins / 60);
+  $mins -= $hrs * 60;
+  $offset = sprintf('%+d:%02d', $hrs*$sgn, $mins);
+  $dsn = $database_type . ":unix_socket=" . $database_sock . ";dbname=" . $database_name;
+  $opt = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+    PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '" . $offset . "', group_concat_max_len = 3423543543;",
+  ];
+  $pdo = new PDO($dsn, $database_user, $database_pass, $opt);
+  init_db_schema();
+}
