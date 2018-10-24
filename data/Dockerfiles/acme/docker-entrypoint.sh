@@ -177,7 +177,9 @@ while true; do
 
   while read domains; do
     SQL_DOMAIN_ARR+=("${domains}")
-  done < <(mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "SELECT domain FROM domain WHERE backupmx=0" -Bs)
+
+
+  done < <(mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "SELECT d.domain as domain from domain d left join (select domain, count(username) as mailboxes from mailbox group by domain) m on m.domain = d.domain where m.mailboxes > 0 and d.backupmx=0" -Bs)
 
   for SQL_DOMAIN in "${SQL_DOMAIN_ARR[@]}"; do
     A_DISCOVER=$(dig A autodiscover.${SQL_DOMAIN} +short | tail -n 1)
