@@ -38,7 +38,25 @@ SSL_EXAMPLE=/var/lib/ssl-example
 
 mkdir -p ${ACME_BASE}/acme/private
 
-restart_containers(){
+reload_configurations(){
+  # Reading container IDs
+  # Wrapping as array to ensure trimmed content when calling $NGINX etc.
+  local NGINX=($(curl --silent --insecure https://dockerapi/containers/json | jq -r '.[] | {name: .Config.Labels["com.docker.compose.service"], id: .Id}' | jq -rc 'select( .name | tostring | contains("nginx-mailcow")) | .id' | tr "\n" " "))
+  local DOVECOT=($(curl --silent --insecure https://dockerapi/containers/json | jq -r '.[] | {name: .Config.Labels["com.docker.compose.service"], id: .Id}' | jq -rc 'select( .name | tostring | contains("dovecot-mailcow")) | .id' | tr "\n" " "))
+  local POSTFIX=($(curl --silent --insecure https://dockerapi/containers/json | jq -r '.[] | {name: .Config.Labels["com.docker.compose.service"], id: .Id}' | jq -rc 'select( .name | tostring | contains("postfix-mailcow")) | .id' | tr "\n" " "))
+  # Reloading
+  echo "Reloading Nginx..."
+  NGINX_RELOAD_RET=$(curl -X POST --insecure https://dockerapi/containers/${NGINX}/exec -d '{"cmd":"reload", "task":"nginx"}' --silent -H 'Content-type: application/json' | jq -r .type)
+  [[ ${NGINX_RELOAD_RET} != 'success' ]] && { echo "Could not reload Nginx, restarting container..."; restart_container ${NGINX} ; }
+  echo "Reloading Dovecot..."
+  DOVECOT_RELOAD_RET=$(curl -X POST --insecure https://dockerapi/containers/${DOVECOT}/exec -d '{"cmd":"reload", "task":"dovecot"}' --silent -H 'Content-type: application/json' | jq -r .type)
+  [[ ${DOVECOT_RELOAD_RET} != 'success' ]] && { echo "Could not reload Dovecot, restarting container..."; restart_container ${DOVECOT} ; }
+  echo "Reloading Postfix..."
+  POSTFIX_RELOAD_RET=$(curl -X POST --insecure https://dockerapi/containers/${POSTFIX}/exec -d '{"cmd":"reload", "task":"postfix"}' --silent -H 'Content-type: application/json' | jq -r .type)
+  [[ ${POSTFIX_RELOAD_RET} != 'success' ]] && { echo "Could not reload Postfix, restarting container..."; restart_container ${POSTFIX} ; }
+}
+
+restart_container(){
   for container in $*; do
     log_f "Restarting ${container}..." no_nl
     C_REST_OUT=$(curl -X POST --insecure https://dockerapi/containers/${container}/restart | jq -r '.msg')
@@ -98,7 +116,7 @@ get_ipv6(){
 
 if [[ -f ${ACME_BASE}/cert.pem ]] && [[ -f ${ACME_BASE}/key.pem ]]; then
   ISSUER=$(openssl x509 -in ${ACME_BASE}/cert.pem -noout -issuer)
-  if [[ ${ISSUER} != *"Let's Encrypt"* && ${ISSUER} != *"mailcow"* ]]; then
+  if [[ ${ISSUER} != *"Let's Encrypt"* && ${ISSUER} != *"mailcow"* && ${ISSUER} != *"Fake LE Intermediate"* ]]; then
     log_f "Found certificate with issuer other than mailcow snake-oil CA and Let's Encrypt, skipping ACME client..."
     sleep 3650d
     exec $(readlink -f "$0")
@@ -145,8 +163,20 @@ while true; do
   declare -a SQL_DOMAIN_ARR
   declare -a VALIDATED_CONFIG_DOMAINS
   declare -a ADDITIONAL_VALIDATED_SAN
-  IFS=',' read -r -a ADDITIONAL_SAN_ARR <<< "${ADDITIONAL_SAN}"
+  IFS=',' read -r -a TMP_ARR <<< "${ADDITIONAL_SAN}"
   log_f "Detecting IP addresses... " no_nl
+
+  unset ADDITIONAL_WC_ARR
+  unset ADDITIONAL_SAN_ARR
+  for i in "${TMP_ARR[@]}" ; do
+    if [[ "$i" =~ \.\*$ ]]; then
+      ADDITIONAL_WC_ARR+=(${i::-2})
+    else
+      ADDITIONAL_SAN_ARR+=($i)
+    fi
+  done
+  ADDITIONAL_WC_ARR+=('autodiscover')
+
   IPV4=$(get_ipv4)
   IPV6=$(get_ipv6)
   log_f "OK" no_date
@@ -164,9 +194,6 @@ while true; do
     fi
   fi
 
-  # Container ids may have changed
-  CONTAINERS_RESTART=($(curl --silent --insecure https://dockerapi/containers/json | jq -r '.[] | {name: .Config.Labels["com.docker.compose.service"], id: .Id}' | jq -rc 'select( .name | tostring | contains("nginx-mailcow") or contains("postfix-mailcow") or contains("dovecot-mailcow")) | .id' | tr "\n" " "))
-
   log_f "Waiting for domain table... " no_nl
   while [[ -z ${DOMAIN_TABLE} ]]; do
     curl --silent http://nginx/ >/dev/null 2>&1
@@ -182,31 +209,37 @@ while true; do
   done < <(mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "SELECT d.domain as domain from domain d left join (select domain, count(username) as mailboxes from mailbox group by domain) m on m.domain = d.domain where m.mailboxes > 0 and d.backupmx=0" -Bs)
 
   for SQL_DOMAIN in "${SQL_DOMAIN_ARR[@]}"; do
-    A_DISCOVER=$(dig A autodiscover.${SQL_DOMAIN} +short | tail -n 1)
-    AAAA_DISCOVER=$(dig AAAA autodiscover.${SQL_DOMAIN} +short | tail -n 1)
-    # Check if CNAME without v6 enabled target
-    if [[ ! -z ${AAAA_DISCOVER} ]] && [[ -z $(echo ${AAAA_DISCOVER} | grep "^\([0-9a-fA-F]\{0,4\}:\)\{1,7\}[0-9a-fA-F]\{0,4\}$") ]]; then
-      AAAA_DISCOVER=
-    fi
-    if [[ ! -z ${AAAA_DISCOVER} ]]; then
-      log_f "Found AAAA record for autodiscover.${SQL_DOMAIN}: ${AAAA_DISCOVER} - skipping A record check"
-      if [[ $(expand ${IPV6:-"0000:0000:0000:0000:0000:0000:0000:0000"}) == $(expand ${AAAA_DISCOVER}) ]] || [[ ${SKIP_IP_CHECK} == "y" ]]; then
-        log_f "Confirmed AAAA record autodiscover.${SQL_DOMAIN}"
-        VALIDATED_CONFIG_DOMAINS+=("autodiscover.${SQL_DOMAIN}")
+    for SUBDOMAIN in "${ADDITIONAL_WC_ARR[@]}"; do
+      if [[  "${SUBDOMAIN}.${SQL_DOMAIN}" == ${MAILCOW_HOSTNAME} ]]; then
+        log_f "Skipping mailcow hostname (${MAILCOW_HOSTNAME}), will be added anyway"
       else
-        log_f "Cannot match your IP ${IPV6:-NO_IPV6_LINK} against hostname autodiscover.${SQL_DOMAIN} ($(expand ${AAAA_DISCOVER}))"
+        A_SUBDOMAIN=$(dig A ${SUBDOMAIN}.${SQL_DOMAIN} +short | tail -n 1)
+        AAAA_SUBDOMAIN=$(dig AAAA ${SUBDOMAIN}.${SQL_DOMAIN} +short | tail -n 1)
+        # Check if CNAME without v6 enabled target
+        if [[ ! -z ${AAAA_SUBDOMAIN} ]] && [[ -z $(echo ${AAAA_SUBDOMAIN} | grep "^\([0-9a-fA-F]\{0,4\}:\)\{1,7\}[0-9a-fA-F]\{0,4\}$") ]]; then
+          AAAA_SUBDOMAIN=
+        fi
+        if [[ ! -z ${AAAA_SUBDOMAIN} ]]; then
+          log_f "Found AAAA record for ${SUBDOMAIN}.${SQL_DOMAIN}: ${AAAA_SUBDOMAIN} - skipping A record check"
+          if [[ $(expand ${IPV6:-"0000:0000:0000:0000:0000:0000:0000:0000"}) == $(expand ${AAAA_SUBDOMAIN}) ]] || [[ ${SKIP_IP_CHECK} == "y" ]]; then
+            log_f "Confirmed AAAA record ${SUBDOMAIN}.${SQL_DOMAIN}"
+            VALIDATED_CONFIG_DOMAINS+=("${SUBDOMAIN}.${SQL_DOMAIN}")
+          else
+            log_f "Cannot match your IP ${IPV6:-NO_IPV6_LINK} against hostname ${SUBDOMAIN}.${SQL_DOMAIN} ($(expand ${AAAA_SUBDOMAIN}))"
+          fi
+        elif [[ ! -z ${A_SUBDOMAIN} ]]; then
+          log_f "Found A record for ${SUBDOMAIN}.${SQL_DOMAIN}: ${A_SUBDOMAIN}"
+          if [[ ${IPV4:-ERR} == ${A_SUBDOMAIN} ]] || [[ ${SKIP_IP_CHECK} == "y" ]]; then
+            log_f "Confirmed A record ${SUBDOMAIN}.${SQL_DOMAIN}"
+            VALIDATED_CONFIG_DOMAINS+=("${SUBDOMAIN}.${SQL_DOMAIN}")
+          else
+            log_f "Cannot match your IP ${IPV4} against hostname ${SUBDOMAIN}.${SQL_DOMAIN} (${A_SUBDOMAIN})"
+          fi
+        else
+          log_f "No A or AAAA record found for hostname ${SUBDOMAIN}.${SQL_DOMAIN}"
+        fi
       fi
-    elif [[ ! -z ${A_DISCOVER} ]]; then
-      log_f "Found A record for autodiscover.${SQL_DOMAIN}: ${A_DISCOVER}"
-      if [[ ${IPV4:-ERR} == ${A_DISCOVER} ]] || [[ ${SKIP_IP_CHECK} == "y" ]]; then
-        log_f "Confirmed A record autodiscover.${SQL_DOMAIN}"
-        VALIDATED_CONFIG_DOMAINS+=("autodiscover.${SQL_DOMAIN}")
-      else
-        log_f "Cannot match your IP ${IPV4} against hostname autodiscover.${SQL_DOMAIN} (${A_DISCOVER})"
-      fi
-    else
-      log_f "No A or AAAA record found for hostname autodiscover.${SQL_DOMAIN}"
-    fi
+    done
   done
 
   A_MAILCOW_HOSTNAME=$(dig A ${MAILCOW_HOSTNAME} +short | tail -n 1)
@@ -297,8 +330,15 @@ while true; do
     cp ${ACME_BASE}/acme/private/privkey.pem ${ACME_BASE}/acme/private/${DATE}.bak/ # Keep key for TLSA 3 1 1 records
   fi
 
+  if [[ "${LE_STAGING}" =~ ^([yY][eE][sS]|[yY])+$ ]]; then
+    log_f "Using Let's Encrypt staging servers"
+    STAGING_PARAMETER="-s"
+  else
+    STAGING_PARAMETER=
+  fi
+
   ACME_RESPONSE=$(acme-client \
-    -v -e -b -N -n \
+    -v -e -b -N -n ${STAGING_PARAMETER} \
     -a 'https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf' \
     -f ${ACME_BASE}/acme/private/account.key \
     -k ${ACME_BASE}/acme/private/privkey.pem \
@@ -318,7 +358,7 @@ while true; do
         cp ${SSL_EXAMPLE}/cert.pem ${ACME_BASE}/cert.pem
         cp ${SSL_EXAMPLE}/key.pem ${ACME_BASE}/key.pem
       fi
-      restart_containers ${CONTAINERS_RESTART[*]}
+      reload_configurations
       ;;
     1) # failure
       ACME_RESPONSE_B64=$(echo ${ACME_RESPONSE} | openssl enc -e -A -base64)
@@ -345,7 +385,7 @@ while true; do
         cp ${SSL_EXAMPLE}/key.pem ${ACME_BASE}/key.pem
         TRIGGER_RESTART=1
       fi
-      [[ ${TRIGGER_RESTART} == 1 ]] && restart_containers ${CONTAINERS_RESTART[*]}
+      [[ ${TRIGGER_RESTART} == 1 ]] && reload_configurations
       log_f "Retrying in 30 minutes..."
       sleep 30m
       exec $(readlink -f "$0")
@@ -366,7 +406,7 @@ while true; do
         TRIGGER_RESTART=1
       fi
       log_f "Certificate was not changed"
-      [[ ${TRIGGER_RESTART} == 1 ]] && restart_containers ${CONTAINERS_RESTART[*]}
+      [[ ${TRIGGER_RESTART} == 1 ]] && reload_configurations
       ;;
     *) # unspecified
       ACME_RESPONSE_B64=$(echo ${ACME_RESPONSE} | openssl enc -e -A -base64)
@@ -388,7 +428,7 @@ while true; do
         cp ${SSL_EXAMPLE}/key.pem ${ACME_BASE}/key.pem
         TRIGGER_RESTART=1
       fi
-      [[ ${TRIGGER_RESTART} == 1 ]] && restart_containers ${CONTAINERS_RESTART[*]}
+      [[ ${TRIGGER_RESTART} == 1 ]] && reload_configurations
       log_f "Retrying in 30 minutes..."
       sleep 30m
       exec $(readlink -f "$0")

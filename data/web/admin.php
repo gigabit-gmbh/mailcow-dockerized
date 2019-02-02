@@ -7,13 +7,17 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
 $tfa_data = get_tfa();
 ?>
 <div class="container">
+
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#tab-access" aria-controls="tab-access" role="tab" data-toggle="tab"><?=$lang['admin']['access'];?></a></li>
     <li role="presentation"><a href="#tab-config" aria-controls="tab-config" role="tab" data-toggle="tab"><?=$lang['admin']['configuration'];?></a></li>
+    <li role="presentation"><a href="#tab-routing" aria-controls="tab-config" role="tab" data-toggle="tab"><?=$lang['admin']['routing'];?></a></li>
     <li role="presentation"><a href="#tab-sys-mails" aria-controls="tab-sys-mails" role="tab" data-toggle="tab"><?=$lang['admin']['sys_mails'];?></a></li>
-    <li role="presentation"><a href="#tab-mailq" aria-controls="tab-mailq" role="tab" data-toggle="tab">Queue manager</a></li>
+    <li role="presentation"><a href="#tab-mailq" aria-controls="tab-mailq" role="tab" data-toggle="tab"><?=$lang['admin']['queue_manager'];?></a></li>
   </ul>
 
+  <div class="row">
+  <div class="col-md-12">
   <div class="tab-content" style="padding-top:20px">
   <div role="tabpanel" class="tab-pane active" id="tab-access">
     <div class="panel panel-danger">
@@ -178,6 +182,99 @@ $tfa_data = get_tfa();
     </div>
   </div>
 
+  <div role="tabpanel" class="tab-pane" id="tab-routing">
+    <div class="panel panel-default">
+      <div class="panel-heading"><?=$lang['admin']['relayhosts'];?></div>
+      <div class="panel-body">
+        <p style="margin-bottom:40px"><?=$lang['admin']['relayhosts_hint'];?></p>
+        <div class="table-responsive">
+          <table class="table table-striped table-condensed" id="relayhoststable"></table>
+        </div>
+        <div class="mass-actions-admin">
+          <div class="btn-group btn-group-sm">
+            <button type="button" id="toggle_multi_select_all" data-id="rlyhosts" class="btn btn-default"><?=$lang['mailbox']['toggle_all'];?></button>
+            <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['quick_actions'];?> <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a data-action="edit_selected" data-id="rlyhosts" data-api-url='edit/relayhost' data-api-attr='{"active":"1"}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
+              <li><a data-action="edit_selected" data-id="rlyhosts" data-api-url='edit/relayhost' data-api-attr='{"active":"0"}' href="#"><?=$lang['mailbox']['deactivate'];?></a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-action="delete_selected" data-id="rlyhosts" data-api-url='delete/relayhost' href="#"><?=$lang['admin']['remove'];?></a></li>
+            </ul>
+          </div>
+        </div>
+        <legend><?=$lang['admin']['add_relayhost'];?></legend>
+        <p class="help-block"><?=$lang['admin']['add_relayhost_hint'];?></p>
+        <div class="row">
+          <div class="col-md-6">
+            <form class="form" data-id="rlyhost" role="form" method="post">
+              <div class="form-group">
+                <label for="hostname"><?=$lang['admin']['host'];?></label>
+                <input class="form-control input-sm" name="hostname" placeholder='host:25, host, [host]:25, [0.0.0.0]:25' required>
+              </div>
+              <div class="form-group">
+                <label for="username"><?=$lang['admin']['username'];?></label>
+                <input class="form-control input-sm" name="username">
+              </div>
+              <div class="form-group">
+                <label for="password"><?=$lang['admin']['password'];?></label>
+                <input class="form-control input-sm" name="password">
+              </div>
+              <button class="btn btn-default" data-action="add_item" data-id="rlyhost" data-api-url='add/relayhost' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['add'];?></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading"><?=$lang['admin']['transport_maps'];?></div>
+      <div class="panel-body">
+        <p style="margin-bottom:40px"><?=$lang['admin']['transports_hint'];?></p>
+        <div class="table-responsive">
+          <table class="table table-striped table-condensed" id="transportstable"></table>
+        </div>
+        <div class="mass-actions-admin">
+          <div class="btn-group btn-group-sm">
+            <button type="button" id="toggle_multi_select_all" data-id="transports" class="btn btn-default"><?=$lang['mailbox']['toggle_all'];?></button>
+            <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['quick_actions'];?> <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a data-action="edit_selected" data-id="transports" data-api-url='edit/transport' data-api-attr='{"active":"1"}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
+              <li><a data-action="edit_selected" data-id="transports" data-api-url='edit/transport' data-api-attr='{"active":"0"}' href="#"><?=$lang['mailbox']['deactivate'];?></a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-action="delete_selected" data-id="transports" data-api-url='delete/transport' href="#"><?=$lang['admin']['remove'];?></a></li>
+            </ul>
+          </div>
+        </div>
+        <legend><?=$lang['admin']['add_transport'];?></legend>
+        <p class="help-block"><?=$lang['admin']['add_transports_hint'];?></p>
+        <div class="row">
+          <div class="col-md-6">
+            <form class="form" data-id="transport" role="form" method="post">
+              <div class="form-group">
+                <label for="destination"><?=$lang['admin']['destination'];?></label>
+                <input class="form-control input-sm" name="destination" placeholder='example.org, .example.org, *, box@example.org' required>
+              </div>
+              <div class="form-group">
+                <label for="nexthop"><?=$lang['admin']['nexthop'];?></label>
+                <input class="form-control input-sm" name="nexthop" placeholder='host:25, host, [host]:25, [0.0.0.0]:25' required>
+              </div>
+              <div class="form-group">
+                <label for="username"><?=$lang['admin']['username'];?></label>
+                <input class="form-control input-sm" name="username">
+              </div>
+              <div class="form-group">
+                <label for="password"><?=$lang['admin']['password'];?></label>
+                <input class="form-control" name="password">
+              </div>
+              <p class="help-block"><?=$lang['admin']['credentials_transport_warning'];?></p>
+              <button class="btn btn-default" data-action="add_item" data-id="transport" data-api-url='add/transport' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['add'];?></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div role="tabpanel" class="tab-pane" id="tab-config">
     <div class="row">
     <div id="sidebar-admin" class="col-sm-2 hidden-xs">
@@ -185,7 +282,6 @@ $tfa_data = get_tfa();
         <a href="#dkim" class="list-group-item"><?=$lang['admin']['dkim_keys'];?></a>
         <a href="#fwdhosts" class="list-group-item"><?=$lang['admin']['forwarding_hosts'];?></a>
         <a href="#f2bparams" class="list-group-item"><?=$lang['admin']['f2b_parameters'];?></a>
-        <a href="#relayhosts" class="list-group-item">Relayhosts</a>
         <a href="#quarantine" class="list-group-item"><?=$lang['admin']['quarantine'];?></a>
         <a href="#rsettings" class="list-group-item">Rspamd settings map</a>
         <a href="#customize" class="list-group-item"><?=$lang['admin']['customize'];?></a>
@@ -212,15 +308,15 @@ $tfa_data = get_tfa();
             <div class="row">
               <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" /></div>
               <div class="col-md-3">
-                <p>Domain: <strong><?=htmlspecialchars($domain);?></strong>
+                <p><?=$lang['admin']['domain'];?>: <strong><?=htmlspecialchars($domain);?></strong>
                   <p class="dkim-label"><span class="label label-success"><?=$lang['admin']['dkim_key_valid'];?></span></p>
-                  <p class="dkim-label"><span class="label label-primary">Selector '<?=$dkim['dkim_selector'];?>'</span></p>
+                  <p class="dkim-label"><span class="label label-primary"><?=$lang['admin']['dkim_domains_selector'];?> '<?=$dkim['dkim_selector'];?>'</span></p>
                   <p class="dkim-label"><span class="label label-info"><?=$dkim['length'];?> bit</span></p>
                 </p>
               </div>
               <div class="col-md-8">
                   <pre><?=$dkim['dkim_txt'];?></pre>
-                  <p data-toggle="modal" data-target="#showDKIMprivKey" id="dkim_priv" style="cursor:pointer;margin-top:-8pt" data-priv-key="<?=$dkim['privkey'];?>"><small>↪ Private key</small></p>
+                  <p data-toggle="modal" data-target="#showDKIMprivKey" id="dkim_priv" style="cursor:pointer;margin-top:-8pt" data-priv-key="<?=$dkim['privkey'];?>"><small>↪ <?=$lang['admin']['dkim_private_key'];?></small></p>
               </div>
               <hr class="visible-xs visible-sm">
             </div>
@@ -231,7 +327,7 @@ $tfa_data = get_tfa();
           <div class="row">
               <div class="col-md-1"><input class="dkim_missing" type="checkbox" data-id="dkim" name="multi_select" value="<?=$domain;?>" disabled /></div>
             <div class="col-md-3">
-              <p>Domain: <strong><?=htmlspecialchars($domain);?></strong><br /><span class="label label-danger"><?=$lang['admin']['dkim_key_missing'];?></span></p>
+              <p><?=$lang['admin']['domain'];?>: <strong><?=htmlspecialchars($domain);?></strong><br /><span class="label label-danger"><?=$lang['admin']['dkim_key_missing'];?></span></p>
             </div>
             <div class="col-md-8"><pre>-</pre></div>
               <hr class="visible-xs visible-sm">
@@ -282,7 +378,7 @@ $tfa_data = get_tfa();
             <div class="row">
               <div class="col-md-1"><input type="checkbox" data-id="dkim" name="multi_select" value="<?=$blind;?>" /></div>
               <div class="col-md-3">
-                <p>Domain: <strong><?=htmlspecialchars($blind);?></strong>
+                <p><?=$lang['admin']['domain'];?>: <strong><?=htmlspecialchars($blind);?></strong>
                   <p class="dkim-label"><span class="label label-warning"><?=$lang['admin']['dkim_key_unused'];?></span></p>
                   <p class="dkim-label"><span class="label label-primary">Selector '<?=$dkim['dkim_selector'];?>'</span></p>
                   <p class="dkim-label"><span class="label label-info"><?=$dkim['length'];?> bit</span></p>
@@ -307,7 +403,7 @@ $tfa_data = get_tfa();
             <small>↪ <a href="#" id="dkim_missing_keys"><?=$lang['admin']['dkim_domains_wo_keys'];?></a></small>
           </div>
           <div class="form-group">
-            <label for="domain">Selector</label>
+            <label for="domain"><?=$lang['admin']['dkim_domains_selector'];?></label>
             <input class="form-control input-sm" name="dkim_selector" value="dkim" required>
           </div>
           <div class="form-group">
@@ -325,15 +421,15 @@ $tfa_data = get_tfa();
         <div id="import_dkim" class="collapse">
         <form class="form" data-id="dkim_import" role="form" method="post">
           <div class="form-group">
-            <label for="domain">Domain:</label>
+            <label for="domain"><?=$lang['admin']['domain'];?>:</label>
             <input class="form-control input-sm" name="domain" placeholder="example.org" required>
           </div>
           <div class="form-group">
-            <label for="domain">Selector:</label>
+            <label for="domain"><?=$lang['admin']['dkim_domains_selector'];?>:</label>
             <input class="form-control input-sm" name="dkim_selector" value="dkim" required>
           </div>
           <div class="form-group">
-            <label for="private_key_file"><?=$lang['admin']['private_key'];?>:</label>
+            <label for="private_key_file"><?=$lang['admin']['private_key'];?>: (RSA PKCS#8)</label>
             <textarea class="form-control input-sm" rows="10" name="private_key_file" id="private_key_file" required placeholder="-----BEGIN RSA KEY-----"></textarea>
           </div>
           <button class="btn btn-sm btn-default" data-action="add_item" data-id="dkim_import" data-api-url='add/dkim_import' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['import'];?></button>
@@ -513,51 +609,11 @@ $tfa_data = get_tfa();
       </div>
     </div>
 
-    <span class="anchor" id="relayhosts"></span>
-    <div class="panel panel-default">
-      <div class="panel-heading">Relayhosts</div>
-      <div class="panel-body">
-        <p style="margin-bottom:40px"><?=$lang['admin']['relayhosts_hint'];?></p>
-        <div class="table-responsive">
-          <table class="table table-striped table-condensed" id="relayhoststable"></table>
-        </div>
-        <div class="mass-actions-admin">
-          <div class="btn-group btn-group-sm">
-            <button type="button" id="toggle_multi_select_all" data-id="rlyhosts" class="btn btn-default"><?=$lang['mailbox']['toggle_all'];?></button>
-            <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['quick_actions'];?> <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a data-action="edit_selected" data-id="rlyhosts" data-api-url='edit/relayhost' data-api-attr='{"active":"1"}' href="#"><?=$lang['mailbox']['activate'];?></a></li>
-              <li><a data-action="edit_selected" data-id="rlyhosts" data-api-url='edit/relayhost' data-api-attr='{"active":"0"}' href="#"><?=$lang['mailbox']['deactivate'];?></a></li>
-              <li role="separator" class="divider"></li>
-              <li><a data-action="delete_selected" data-id="rlyhosts" data-api-url='delete/relayhost' href="#"><?=$lang['admin']['remove'];?></a></li>
-            </ul>
-          </div>
-        </div>
-        <legend><?=$lang['admin']['add_relayhost'];?></legend>
-        <p class="help-block"><?=$lang['admin']['add_relayhost_add_hint'];?></p>
-        <form class="form" data-id="rlyhost" role="form" method="post">
-          <div class="form-group">
-            <label for="hostname"><?=$lang['admin']['host'];?></label>
-            <input class="form-control" name="hostname" required>
-          </div>
-          <div class="form-group">
-            <label for="hostname"><?=$lang['admin']['username'];?></label>
-            <input class="form-control" name="username">
-          </div>
-          <div class="form-group">
-            <label for="hostname"><?=$lang['admin']['password'];?></label>
-            <input class="form-control" name="password">
-          </div>
-          <button class="btn btn-default" data-action="add_item" data-id="rlyhost" data-api-url='add/relayhost' data-api-attr='{}' href="#"><span class="glyphicon glyphicon-plus"></span> <?=$lang['admin']['add'];?></button>
-        </form>
-      </div>
-    </div>
-
     <span class="anchor" id="quarantine"></span>
     <div class="panel panel-default">
       <div class="panel-heading"><?=$lang['admin']['quarantine'];?></div>
       <div class="panel-body">
-       <?php $q_data = quarantine('settings'); ?>
+       <?php $q_data = quarantine('settings');?>
         <form class="form" data-id="quarantine" role="form" method="post">
           <div class="row">
             <div class="col-sm-6">
@@ -573,17 +629,51 @@ $tfa_data = get_tfa();
               </div>
             </div>
           </div>
-          <div class="form-group">
-            <label for="exclude_domains"><?=$lang['admin']['quarantine_exclude_domains'];?></label><br />
-            <select data-width="100%" name="exclude_domains" class="selectpicker" title="<?=$lang['tfa']['select'];?>" multiple>
-              <?php
-              foreach (array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains')) as $domain):
-              ?>
-                <option <?=(in_array($domain, $q_data['exclude_domains'])) ? 'selected' : null;?>><?=htmlspecialchars($domain);?></option>
-              <?php
-              endforeach;
-              ?>
-            </select>
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="sender"><?=$lang['admin']['quarantine_notification_sender'];?>:</label>
+                <input type="text" class="form-control" name="sender" value="<?=$q_data['sender'];?>" placeholder="quarantine@localhost">
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="subject"><?=$lang['admin']['quarantine_notification_subject'];?>:</label>
+                <input type="text" class="form-control" name="subject" value="<?=$q_data['subject'];?>" placeholder="Spam Quarantine Notification">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <label for="html"><?=$lang['admin']['quarantine_notification_html'];?></label>
+              <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control textarea-code" rows="20" name="html"><?=$q_data['html'];?></textarea>
+              <br>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="release_format"><?=$lang['admin']['quarantine_release_format'];?>:</label>
+                <select data-width="100%" name="release_format" class="selectpicker" title="<?=$lang['tfa']['select'];?>">
+                  <option <?=($q_data['release_format'] == 'raw') ? 'selected' : null;?> value="raw"><?=$lang['admin']['quarantine_release_format_raw'];?></option>
+                  <option <?=($q_data['release_format'] == 'attachment') ? 'selected' : null;?> value="attachment"><?=$lang['admin']['quarantine_release_format_att'];?></option>
+                </select>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group">
+                <label for="exclude_domains"><?=$lang['admin']['quarantine_exclude_domains'];?>:</label><br />
+                <select data-width="100%" name="exclude_domains" class="selectpicker" title="<?=$lang['tfa']['select'];?>" multiple>
+                <?php
+                foreach (array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains')) as $domain):
+                ?>
+                  <option <?=(in_array($domain, $q_data['exclude_domains'])) ? 'selected' : null;?>><?=htmlspecialchars($domain);?></option>
+                <?php
+                endforeach;
+                ?>
+                </select>
+              </div>
+            </div>
           </div>
           <button class="btn btn-default" data-action="edit_selected" data-item="self" data-id="quarantine" data-api-url='edit/quarantine' data-api-attr='{"action":"settings"}' href="#"><span class="glyphicon glyphicon-check"></span> <?=$lang['admin']['save'];?></button>
         </form>
@@ -595,7 +685,7 @@ $tfa_data = get_tfa();
       <div class="panel-heading">Rspamd settings map</div>
       <div class="panel-body">
       <legend>Active settings map</legend>
-      <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control" rows="20" id="settings_map" name="settings_map" readonly><?=file_get_contents('http://nginx:8081/settings.php');?></textarea>
+      <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control textarea-code" rows="20" name="settings_map" readonly><?=file_get_contents('http://nginx:8081/settings.php');?></textarea>
       <hr>
       <?php $rsettings = rsettings('get'); ?>
         <form class="form" data-id="rsettings" role="form" method="post">
@@ -861,7 +951,7 @@ $tfa_data = get_tfa();
   <div role="tabpanel" class="tab-pane" id="tab-mailq">
     <div class="panel panel-default">
       <div class="panel-heading">
-        Queue manager <span class="badge badge-info table-lines"></span>
+        <?=$lang['admin']['queue_manager'];?> <span class="badge badge-info table-lines"></span>
         <div class="btn-group pull-right">
           <button class="btn btn-xs btn-default refresh_table" data-draw="draw_queue" data-table="queuetable"><?=$lang['admin']['refresh'];?></button>
         </div>
@@ -875,9 +965,9 @@ $tfa_data = get_tfa();
           <a class="btn btn-sm btn-default" id="toggle_multi_select_all" data-id="mailqitems" href="#"><span class="glyphicon glyphicon-check" aria-hidden="true"></span> <?=$lang['mailbox']['toggle_all'];?></a>
           <a class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" href="#"><?=$lang['mailbox']['quick_actions'];?> <span class="caret"></span></a>
           <ul class="dropdown-menu">
-            <li><a data-toggle="tooltip" title="postqueue -i" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"deliver"}' href="#">Deliver</a></li>
-            <li><a data-toggle="tooltip" title="postsuper -H" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"unhold"}' href="#">Unhold</a></li>
-            <li><a data-toggle="tooltip" title="postsuper -h" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"hold"}' href="#">Hold</a></li>
+            <li><a data-toggle="tooltip" title="postqueue -i" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"deliver"}' href="#"><?=$lang['admin']['queue_deliver_mail'];?></a></li>
+            <li><a data-toggle="tooltip" title="postsuper -H" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"unhold"}' href="#"><?=$lang['admin']['queue_unhold_mail'];?></a></li>
+            <li><a data-toggle="tooltip" title="postsuper -h" data-action="edit_selected" data-id="mailqitems" data-api-url='edit/mailq' data-api-attr='{"action":"hold"}' href="#"><?=$lang['admin']['queue_hold_mail'];?></a></li>
             <li role="separator" class="divider"></li>
             <li><a data-toggle="tooltip" title="postsuper -d" data-action="delete_selected" data-id="mailqitems" data-api-url='delete/mailq' href="#"><?=$lang['mailbox']['remove'];?></a></li>
           </ul>
@@ -902,6 +992,9 @@ $tfa_data = get_tfa();
     </div>
   </div>
 
+  </div> <!-- /tab-content -->
+  </div> <!-- /col-md-12 -->
+  </div> <!-- /row -->
 </div> <!-- /container -->
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/modals/admin.php';
@@ -916,9 +1009,8 @@ echo "var pagination_size = '". $PAGINATION_SIZE . "';\n";
 echo "var log_pagination_size = '". $LOG_PAGINATION_SIZE . "';\n";
 ?>
 </script>
-<script src="/js/footable.min.js"></script>
-<script src="/js/admin.js"></script>
 <?php
+$js_minifier->add('/web/js/site/admin.js');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/footer.inc.php';
 } else {
 	header('Location: /');

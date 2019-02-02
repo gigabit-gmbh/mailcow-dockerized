@@ -74,12 +74,25 @@ function quarantine($_action, $_data = null) {
           return false;
         }
         $retention_size = $_data['retention_size'];
+        if ($_data['release_format'] == 'attachment' || $_data['release_format'] == 'raw') {
+          $release_format = $_data['release_format'];
+        }
+        else {
+          $release_format = 'raw';
+        }
         $max_size = $_data['max_size'];
+        $subject = $_data['subject'];
+        $sender = $_data['sender'];
+        $html = $_data['html'];
         $exclude_domains = (array)$_data['exclude_domains'];
         try {
           $redis->Set('Q_RETENTION_SIZE', intval($retention_size));
           $redis->Set('Q_MAX_SIZE', intval($max_size));
           $redis->Set('Q_EXCLUDE_DOMAINS', json_encode($exclude_domains));
+          $redis->Set('Q_RELEASE_FORMAT', $release_format);
+          $redis->Set('Q_SENDER', $sender);
+          $redis->Set('Q_SUBJ', $subject);
+          $redis->Set('Q_HTML', $html);
         }
         catch (RedisException $e) {
           $_SESSION['return'][] = array(
@@ -124,53 +137,118 @@ function quarantine($_action, $_data = null) {
             continue;
           }
           $sender = (isset($row['sender'])) ? $row['sender'] : 'sender-unknown@rspamd';
-          try {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
-            $mail->SMTPDebug = 0;
-            $mail->SMTPOptions = array(
-              'ssl' => array(
-                  'verify_peer' => false,
-                  'verify_peer_name' => false,
-                  'allow_self_signed' => true
-              )
-            );
-            if (!empty(gethostbynamel('postfix-mailcow'))) {
-              $postfix = 'postfix-mailcow';
-            }
-            if (!empty(gethostbynamel('postfix'))) {
-              $postfix = 'postfix';
-            }
-            else {
-              $_SESSION['return'][] = array(
-                'type' => 'warning',
-                'log' => array(__FUNCTION__, $_action, $_data_log),
-                'msg' => array('release_send_failed', 'Cannot determine Postfix host')
-              );
-              continue;
-            }
-            $mail->Host = $postfix;
-            $mail->Port = 590;
-            $mail->setFrom($sender);
-            $mail->CharSet = 'UTF-8';
-            $mail->Subject = sprintf($lang['quarantine']['release_subject'], $row['qid']);
-            $mail->addAddress($row['rcpt']);
-            $mail->IsHTML(false);
-            $msg_tmpf = tempnam("/tmp", $row['qid']);
-            file_put_contents($msg_tmpf, $row['msg']);
-            $mail->addAttachment($msg_tmpf, $row['qid'] . '.eml');
-            $mail->Body = sprintf($lang['quarantine']['release_body']);
-            $mail->send();
-            unlink($msg_tmpf);
+          if (!empty(gethostbynamel('postfix-mailcow'))) {
+            $postfix = 'postfix-mailcow';
           }
-          catch (phpmailerException $e) {
-            unlink($msg_tmpf);
+          if (!empty(gethostbynamel('postfix'))) {
+            $postfix = 'postfix';
+          }
+          else {
             $_SESSION['return'][] = array(
               'type' => 'warning',
               'log' => array(__FUNCTION__, $_action, $_data_log),
-              'msg' => array('release_send_failed', $e->errorMessage())
+              'msg' => array('release_send_failed', 'Cannot determine Postfix host')
             );
             continue;
+          }
+          try {
+            $release_format = $redis->Get('Q_RELEASE_FORMAT');
+          }
+          catch (RedisException $e) {
+            $_SESSION['return'][] = array(
+              'type' => 'danger',
+              'log' => array(__FUNCTION__, $_action, $_data_log),
+              'msg' => array('redis_error', $e)
+            );
+            return false;
+          }
+          if ($release_format == 'attachment') {
+            try {
+              $mail = new PHPMailer(true);
+              $mail->isSMTP();
+              $mail->SMTPDebug = 0;
+              $mail->SMTPOptions = array(
+                'ssl' => array(
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                )
+              );
+              if (!empty(gethostbynamel('postfix-mailcow'))) {
+                $postfix = 'postfix-mailcow';
+              }
+              if (!empty(gethostbynamel('postfix'))) {
+                $postfix = 'postfix';
+              }
+              else {
+                $_SESSION['return'][] = array(
+                  'type' => 'warning',
+                  'log' => array(__FUNCTION__, $_action, $_data_log),
+                  'msg' => array('release_send_failed', 'Cannot determine Postfix host')
+                );
+                continue;
+              }
+              $mail->Host = $postfix;
+              $mail->Port = 590;
+              $mail->setFrom($sender);
+              $mail->CharSet = 'UTF-8';
+              $mail->Subject = sprintf($lang['quarantine']['release_subject'], $row['qid']);
+              $mail->addAddress($row['rcpt']);
+              $mail->IsHTML(false);
+              $msg_tmpf = tempnam("/tmp", $row['qid']);
+              file_put_contents($msg_tmpf, $row['msg']);
+              $mail->addAttachment($msg_tmpf, $row['qid'] . '.eml');
+              $mail->Body = sprintf($lang['quarantine']['release_body']);
+              $mail->send();
+              unlink($msg_tmpf);
+            }
+            catch (phpmailerException $e) {
+              unlink($msg_tmpf);
+              $_SESSION['return'][] = array(
+                'type' => 'warning',
+                'log' => array(__FUNCTION__, $_action, $_data_log),
+                'msg' => array('release_send_failed', $e->errorMessage())
+              );
+              continue;
+            }
+          }
+          elseif ($release_format == 'raw') {
+            $postfix_talk = array(
+              array('220', 'HELO quarantine' . chr(10)),
+              array('250', 'MAIL FROM: ' . $sender . chr(10)),
+              array('250', 'RCPT TO: ' . $row['rcpt'] . chr(10)),
+              array('250', 'DATA' . chr(10)),
+              array('354', $row['msg'] . chr(10) . '.' . chr(10)),
+              array('250', 'QUIT' . chr(10)),
+              array('221', '')
+            );
+            // Thanks to https://stackoverflow.com/questions/6632399/given-an-email-as-raw-text-how-can-i-send-it-using-php
+            $smtp_connection = fsockopen($postfix, 590, $errno, $errstr, 1); 
+            if (!$smtp_connection) {
+              $_SESSION['return'][] = array(
+                'type' => 'warning',
+                'log' => array(__FUNCTION__, $_action, $_data_log),
+                'msg' => 'Cannot connect to Postfix'
+              );
+              return false;
+            }
+            for ($i=0; $i < count($postfix_talk); $i++) {
+              $smtp_resource = fgets($smtp_connection, 256); 
+              if (substr($smtp_resource, 0, 3) !== $postfix_talk[$i][0]) {
+                $ret = substr($smtp_resource, 0, 3);
+                $ret = (empty($ret)) ? '-' : $ret;
+                $_SESSION['return'][] = array(
+                  'type' => 'warning',
+                  'log' => array(__FUNCTION__, $_action, $_data_log),
+                  'msg' => 'Postfix returned SMTP code ' . $smtp_resource . ', expected ' . $postfix_talk[$i][0]
+                );
+                return false;
+              }
+              if ($postfix_talk[$i][1] !== '')  {
+                fputs($smtp_connection, $postfix_talk[$i][1]);
+              }
+            }
+            fclose($smtp_connection);
           }
           try {
             $stmt = $pdo->prepare("DELETE FROM `quarantine` WHERE `id` = :id");
@@ -321,7 +399,7 @@ function quarantine($_action, $_data = null) {
     break;
     case 'get':
       if ($_SESSION['mailcow_cc_role'] == "user") {
-        $stmt = $pdo->prepare('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine` WHERE `rcpt` = :mbox');
+        $stmt = $pdo->prepare('SELECT `id`, `qid`, `subject`, LOCATE("VIRUS_FOUND", `symbols`) AS `virus_flag`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine` WHERE `rcpt` = :mbox');
         $stmt->execute(array(':mbox' => $_SESSION['mailcow_cc_username']));
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         while($row = array_shift($rows)) {
@@ -329,7 +407,7 @@ function quarantine($_action, $_data = null) {
         }
       }
       elseif ($_SESSION['mailcow_cc_role'] == "admin") {
-        $stmt = $pdo->query('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine`');
+        $stmt = $pdo->query('SELECT `id`, `qid`, `subject`, LOCATE("VIRUS_FOUND", `symbols`) AS `virus_flag`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine`');
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         while($row = array_shift($rows)) {
           $q_meta[] = $row;
@@ -338,7 +416,7 @@ function quarantine($_action, $_data = null) {
       else {
         $domains = array_merge(mailbox('get', 'domains'), mailbox('get', 'alias_domains'));
         foreach ($domains as $domain) {
-          $stmt = $pdo->prepare('SELECT `id`, `qid`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine` WHERE `rcpt` REGEXP :domain');
+          $stmt = $pdo->prepare('SELECT `id`, `qid`, `subject`, LOCATE("VIRUS_FOUND", `symbols`) AS `virus_flag`, `rcpt`, `sender`, UNIX_TIMESTAMP(`created`) AS `created` FROM `quarantine` WHERE `rcpt` REGEXP :domain');
           $stmt->execute(array(':domain' => '@' . $domain . '$'));
           $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
           while($row = array_shift($rows)) {
@@ -349,18 +427,19 @@ function quarantine($_action, $_data = null) {
       return $q_meta;
     break;
     case 'settings':
-      if ($_SESSION['mailcow_cc_role'] != "admin") {
-        $_SESSION['return'][] = array(
-          'type' => 'danger',
-          'log' => array(__FUNCTION__, $_action, $_data_log),
-          'msg' => 'access_denied'
-        );
-        return false;
-      }
       try {
-        $settings['exclude_domains'] = json_decode($redis->Get('Q_EXCLUDE_DOMAINS'), true);
+        if ($_SESSION['mailcow_cc_role'] == "admin") {
+          $settings['exclude_domains'] = json_decode($redis->Get('Q_EXCLUDE_DOMAINS'), true);
+        }
         $settings['max_size'] = $redis->Get('Q_MAX_SIZE');
         $settings['retention_size'] = $redis->Get('Q_RETENTION_SIZE');
+        $settings['release_format'] = $redis->Get('Q_RELEASE_FORMAT');
+        $settings['subject'] = $redis->Get('Q_SUBJ');
+        $settings['sender'] = $redis->Get('Q_SENDER');
+        $settings['html'] = htmlspecialchars($redis->Get('Q_HTML'));
+        if (empty($settings['html'])) {
+          $settings['html'] = htmlspecialchars(file_get_contents("/tpls/quarantine.tpl"));
+        }
       }
       catch (RedisException $e) {
         $_SESSION['return'][] = array(

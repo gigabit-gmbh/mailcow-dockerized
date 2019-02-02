@@ -78,11 +78,11 @@ unset($https_port);
 // Uses HTTP_ACCEPT_LANGUAGE header
 $DETECT_LANGUAGE = true;
 
-// Change default language, "de", "en", "es", "nl", "pt", "ru"
+// Change default language, "cs", "de", "en", "es", "nl", "pt", "ru"
 $DEFAULT_LANG = 'en';
 
 // Available languages
-$AVAILABLE_LANGUAGES = array('de', 'en', 'es', 'fr', 'lv', 'nl', 'pl', 'pt', 'ru', 'it', 'ca');
+$AVAILABLE_LANGUAGES = array('cs', 'de', 'en', 'es', 'fr', 'lv', 'nl', 'pl', 'pt', 'ru', 'it', 'ca');
 
 // Change theme (default: lumen)
 // Needs to be one of those: cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, readable, sandstone,
@@ -93,11 +93,11 @@ $DEFAULT_THEME = 'lumen';
 
 // Password complexity as regular expression
 // Min. 6 characters
-//$PASSWD_REGEP = '.{6,}';
+$PASSWD_REGEP = '.{6,}';
 // Min. 6 characters, which must include at least one uppercase letter, one lowercase letter and one number
 // $PASSWD_REGEP = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[a-z]).{6,}$';
 // Min. 6 characters, which must include at least one letter and one number
-$PASSWD_REGEP = '^(?=.*[0-9])(?=.*[A-Za-z]).{6,}$';
+// $PASSWD_REGEP = '^(?=.*[0-9])(?=.*[A-Za-z]).{6,}$';
 
 // Show DKIM private keys - false by default
 $SHOW_DKIM_PRIV_KEYS = false;
@@ -134,6 +134,9 @@ $DOCKER_TIMEOUT = 60;
 // Anonymize IPs logged via UI
 $ANONYMIZE_IPS = true;
 
+// MAILBOX_DEFAULT_ATTRIBUTES define default attributes for new mailboxes
+// These settings will not change existing mailboxes
+
 // Force incoming TLS for new mailboxes by default
 $MAILBOX_DEFAULT_ATTRIBUTES['tls_enforce_in'] = false;
 
@@ -145,3 +148,10 @@ $MAILBOX_DEFAULT_ATTRIBUTES['force_pw_update'] = false;
 
 // Force password change on next login (only allows login to mailcow UI)
 $MAILBOX_DEFAULT_ATTRIBUTES['sogo_access'] = true;
+
+// Send notification when quarantine is not empty (never, hourly, daily, weekly)
+$MAILBOX_DEFAULT_ATTRIBUTES['quarantine_notification'] = 'never';
+
+// Default mailbox format, should not be changed unless you know exactly, what you do, keep the trailing ":"
+// Check dovecot.conf for further changes (e.g. shared namespace)
+$MAILBOX_DEFAULT_ATTRIBUTES['mailbox_format'] = 'maildir:';
