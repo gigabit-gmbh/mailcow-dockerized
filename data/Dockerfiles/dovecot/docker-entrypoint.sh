@@ -106,7 +106,7 @@ chmod 644 /usr/local/etc/dovecot/mail_plugins /usr/local/etc/dovecot/mail_plugin
 cat <<EOF > /usr/local/etc/dovecot/sql/dovecot-dict-sql-userdb.conf
 driver = mysql
 connect = "host=/var/run/mysqld/mysqld.sock dbname=${DBNAME} user=${DBUSER} password=${DBPASS}"
-user_query = SELECT CONCAT(JSON_UNQUOTE(JSON_EXTRACT(attributes, '$.mailbox_format')), mailbox_path_prefix, '%d/%n/:VOLATILEDIR=/var/volatile/%u') AS mail, 5000 AS uid, 5000 AS gid, concat('*:bytes=', quota) AS quota_rule FROM mailbox WHERE username = '%u' AND active = '1'
+user_query = SELECT CONCAT(JSON_UNQUOTE(JSON_EXTRACT(attributes, '$.mailbox_format')), mailbox_path_prefix, '%d/%n/${MAILDIR_SUB}:VOLATILEDIR=/var/volatile/%u') AS mail, 5000 AS uid, 5000 AS gid, concat('*:bytes=', quota) AS quota_rule FROM mailbox WHERE username = '%u' AND active = '1'
 iterate_query = SELECT username FROM mailbox WHERE active='1';
 EOF
 
@@ -165,7 +165,8 @@ chmod +x /usr/local/lib/dovecot/sieve/rspamd-pipe-ham \
   /usr/local/bin/trim_logs.sh \
   /usr/local/bin/sa-rules.sh \
   /usr/local/bin/maildir_gc.sh \
-  /usr/local/sbin/stop-supervisor.sh
+  /usr/local/sbin/stop-supervisor.sh \
+  /usr/local/bin/quota_notify.py
 
 # Setup cronjobs
 echo '* * * * *    root  /usr/local/bin/imapsync_cron.pl 2>&1 | /usr/bin/logger' > /etc/cron.d/imapsync
@@ -173,7 +174,7 @@ echo '30 3 * * *   vmail /usr/local/bin/doveadm quota recalc -A' > /etc/cron.d/d
 echo '* * * * *    vmail /usr/local/bin/trim_logs.sh >> /dev/console 2>&1' > /etc/cron.d/trim_logs
 echo '25 * * * *   vmail /usr/local/bin/maildir_gc.sh >> /dev/console 2>&1' > /etc/cron.d/maildir_gc
 echo '30 1 * * *   root  /usr/local/bin/sa-rules.sh  >> /dev/console 2>&1' > /etc/cron.d/sa-rules
-echo '0 2 * * *    root  /usr/bin/curl http://solr:8983/solr/dovecot/update?optimize=true >> /dev/console 2>&1' > /etc/cron.d/solr-optimize
+echo '0 2 * * *    root  /usr/bin/curl http://solr:8983/solr/dovecot-fts/update?optimize=true >> /dev/console 2>&1' > /etc/cron.d/solr-optimize
 echo '*/20 * * * * vmail /usr/local/bin/quarantine_notify.py >> /dev/console 2>&1' > /etc/cron.d/quarantine_notify
 
 # Fix more than 1 hardlink issue
@@ -188,7 +189,7 @@ IMAPSYNC_TABLE=$(mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBP
 [[ ! -z ${IMAPSYNC_TABLE} ]] && mysql --socket=/var/run/mysqld/mysqld.sock -u ${DBUSER} -p${DBPASS} ${DBNAME} -e "UPDATE imapsync SET is_running='0'"
 
 # Envsubst maildir_gc
-envsubst < /usr/local/bin/maildir_gc.sh > /usr/local/bin/maildir_gc.sh
+echo "$(envsubst < /usr/local/bin/maildir_gc.sh)" > /usr/local/bin/maildir_gc.sh
 
 # Collect SA rules once now
 /usr/local/bin/sa-rules.sh
