@@ -53,7 +53,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -85,7 +85,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -118,7 +118,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -152,7 +152,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -194,7 +194,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -231,7 +231,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -262,7 +262,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -294,7 +294,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -326,7 +326,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -358,7 +358,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -441,7 +441,7 @@ jQuery(function($){
       }),
       "empty": lang.empty,
       "paging": {"enabled": true,"limit": 5,"size": log_pagination_size},
-      "filtering": {"enabled": true,"delay": 1,"position": "left","connectors": false,"placeholder": lang.filter_table},
+      "filtering": {"enabled": true,"delay": 1200,"position": "left","connectors": false,"placeholder": lang.filter_table},
       "sorting": {"enabled": true},
       "on": {
         "ready.ft.table": function(e, ft){
@@ -482,6 +482,7 @@ jQuery(function($){
         }
         item.symbols[key].str = str;
       });
+      item.subject = escapeHtml(item.subject);
       item.symbols = Object.keys(item.symbols).
       map(function(key) {
         return item.symbols[key];
@@ -524,6 +525,11 @@ jQuery(function($){
     });
     } else if (table == 'autodiscover_log') {
       $.each(data, function (i, item) {
+        if (item.ua == null) {
+          item.ua = 'unknown';
+        } else {
+          item.ua = escapeHtml(item.ua);
+        }
         item.ua = '<span style="font-size:small">' + item.ua + '</span>';
         if (item.service == "activesync") {
           item.service = '<span class="label label-info">ActiveSync</span>';
@@ -532,7 +538,7 @@ jQuery(function($){
           item.service = '<span class="label label-success">IMAP, SMTP, Cal-/CardDAV</span>';
         }
         else {
-          item.service = '<span class="label label-danger">' + item.service + '</span>';
+          item.service = '<span class="label label-danger">' + escapeHtml(item.service) + '</span>';
         }
       });
     } else if (table == 'watchdog') {
@@ -558,6 +564,7 @@ jQuery(function($){
       $.each(data, function (i, item) {
         if (item === null) { return true; }
         item.user = escapeHtml(item.user);
+        item.call = escapeHtml(item.call);
         item.task = '<code>' + item.task + '</code>';
         item.type = '<span class="label label-' + item.type + '">' + item.type + '</span>';
       });
@@ -569,6 +576,7 @@ jQuery(function($){
         } else {
           item.message = escapeHtml(item.message);
         }
+        item.call = escapeHtml(item.call);
         var danger_class = ["emerg", "alert", "crit", "err"];
         var warning_class = ["warning", "warn"];
         var info_class = ["notice", "info", "debug"];
@@ -588,6 +596,7 @@ jQuery(function($){
         } else if (item.method == 'POST') {
           item.method = '<span class="label label-warning">' + item.method + '</span>';
         }
+        item.data = escapeHtml(item.data);
       });
     } else if (table == 'rllog') {
       $.each(data, function (i, item) {

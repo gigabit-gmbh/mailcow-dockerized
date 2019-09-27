@@ -2,7 +2,7 @@ $(document).ready(function() {
   // mailcow alert box generator
   window.mailcow_alert_box = function(message, type) {
     msg = $('<span/>').text(message).text();
-    if (type == 'danger') {
+    if (type == 'danger' || type == 'info') {
       auto_hide = 0;
       $('#' + localStorage.getItem("add_modal")).modal('show');
       localStorage.removeItem("add_modal");
@@ -144,6 +144,10 @@ $(document).ready(function() {
         });
       });
       $(this).find('button').each(function() {
+        $(this).attr("disabled", true);
+      });
+    } else if ($(this).hasClass('form-group')) {
+      $(this).find('input').each(function() {
         $(this).attr("disabled", true);
       });
     } else if ($(this).hasClass('btn')) {

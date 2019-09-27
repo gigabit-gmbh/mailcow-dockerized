@@ -103,7 +103,7 @@ $SHOW_DKIM_PRIV_KEYS = false;
 // mailcow Apps - buttons on login screen
 $MAILCOW_APPS = array(
   array(
-    'name' => 'SOGo',
+    'name' => 'Webmail',
     'link' => '/SOGo/',
   )
 );
@@ -112,13 +112,13 @@ $MAILCOW_APPS = array(
 $PAGINATION_SIZE = 20;
 
 // Default number of rows/lines to display (log table)
-$LOG_LINES = 100;
+$LOG_LINES = 1000;
 
 // Rows until pagination begins (log table)
-$LOG_PAGINATION_SIZE = 30;
+$LOG_PAGINATION_SIZE = 50;
 
 // Session lifetime in seconds
-$SESSION_LIFETIME = 3600;
+$SESSION_LIFETIME = 10800;
 
 // Label for OTP devices
 $OTP_LABEL = "mailcow UI";
@@ -148,7 +148,7 @@ $MAILBOX_DEFAULT_ATTRIBUTES['force_pw_update'] = false;
 $MAILBOX_DEFAULT_ATTRIBUTES['sogo_access'] = true;
 
 // Send notification when quarantine is not empty (never, hourly, daily, weekly)
-$MAILBOX_DEFAULT_ATTRIBUTES['quarantine_notification'] = 'never';
+$MAILBOX_DEFAULT_ATTRIBUTES['quarantine_notification'] = 'hourly';
 
 // Default mailbox format, should not be changed unless you know exactly, what you do, keep the trailing ":"
 // Check dovecot.conf for further changes (e.g. shared namespace)
