@@ -62,7 +62,7 @@ CKEDITOR.addCss("body {font-size: 16px !important}");
                 'hue-3': '300'
             });
 
-        $mdThemingProvider.setDefaultTheme('mailcow');
+        $mdThemingProvider.setDefaultTheme('gigabit');
         $mdThemingProvider.generateThemesOnDemand(false);
     }
 })();
