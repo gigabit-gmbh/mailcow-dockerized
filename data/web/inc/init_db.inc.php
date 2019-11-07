@@ -3,7 +3,7 @@ function init_db_schema() {
   try {
     global $pdo;
 
-    $db_version = "22092019_0940";
+    $db_version = "06112019_1840";
 
     $stmt = $pdo->query("SHOW TABLES LIKE 'versions'");
     $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -330,7 +330,7 @@ function init_db_schema() {
           "spam_policy" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "delimiter_action" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
-          "eas_reset" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "eas_reset" => "TINYINT(1) NOT NULL DEFAULT '0'",
           "sogo_profile_reset" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "quarantine" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "quarantine_attachments" => "TINYINT(1) NOT NULL DEFAULT '1'",
@@ -474,6 +474,7 @@ function init_db_schema() {
           "syncjobs" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "quarantine" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "login_as" => "TINYINT(1) NOT NULL DEFAULT '1'",
+          "sogo_access" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "bcc_maps" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "filters" => "TINYINT(1) NOT NULL DEFAULT '1'",
           "ratelimit" => "TINYINT(1) NOT NULL DEFAULT '1'",
@@ -783,6 +784,73 @@ function init_db_schema() {
           )
         ),
         "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "oauth_clients" => array(
+        "cols" => array(
+          "id" => "INT NOT NULL AUTO_INCREMENT",
+          "client_id" => "VARCHAR(80) NOT NULL",
+          "client_secret" => "VARCHAR(80)",
+          "redirect_uri" => "VARCHAR(2000)",
+          "grant_types" => "VARCHAR(80)",
+          "scope" => "VARCHAR(4000)",
+          "user_id" => "VARCHAR(80)"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("client_id")
+          ),
+          "unique" => array(
+            "id" => array("id")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "oauth_access_tokens" => array(
+        "cols" => array(
+          "access_token" => "VARCHAR(40) NOT NULL",
+          "client_id" => "VARCHAR(80) NOT NULL",
+          "user_id" => "VARCHAR(80)",
+          "expires" => "TIMESTAMP NOT NULL",
+          "scope" => "VARCHAR(4000)"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("access_token")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "oauth_authorization_codes" => array(
+        "cols" => array(
+          "authorization_code" => "VARCHAR(40) NOT NULL",
+          "client_id" => "VARCHAR(80) NOT NULL",
+          "user_id" => "VARCHAR(80)",
+          "redirect_uri" => "VARCHAR(2000)",
+          "expires" => "TIMESTAMP NOT NULL",
+          "scope" => "VARCHAR(4000)",
+          "id_token" => "VARCHAR(1000)"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("authorization_code")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
+      ),
+      "oauth_refresh_tokens" => array(
+        "cols" => array(
+          "refresh_token" => "VARCHAR(40) NOT NULL",
+          "client_id" => "VARCHAR(80) NOT NULL",
+          "user_id" => "VARCHAR(80)",
+          "expires" => "TIMESTAMP NOT NULL",
+          "scope" => "VARCHAR(4000)"
+        ),
+        "keys" => array(
+          "primary" => array(
+            "" => array("refresh_token")
+          )
+        ),
+        "attr" => "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC"
       )
     );
 
@@ -866,7 +934,7 @@ function init_db_schema() {
           if (strtolower($key_type) == 'unique') {
             foreach ($key_content as $key_name => $key_values) {
               $fields = "`" . implode("`, `", $key_values) . "`";
-              $stmt = $pdo->query("SHOW KEYS FROM `" . $table . "` WHERE Key_name = '" . $key_name . "'"); 
+              $stmt = $pdo->query("SHOW KEYS FROM `" . $table . "` WHERE Key_name = '" . $key_name . "'");
               $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
               $is_drop = ($num_results != 0) ? "DROP INDEX `" . $key_name . "`, " : "";
               $pdo->query("ALTER TABLE `" . $table . "` " . $is_drop . "ADD UNIQUE KEY `" . $key_name . "` (" . $fields . ")");
@@ -875,7 +943,7 @@ function init_db_schema() {
           if (strtolower($key_type) == 'fkey') {
             foreach ($key_content as $key_name => $key_values) {
               $fields = "`" . implode("`, `", $key_values) . "`";
-              $stmt = $pdo->query("SHOW KEYS FROM `" . $table . "` WHERE Key_name = '" . $key_name . "'"); 
+              $stmt = $pdo->query("SHOW KEYS FROM `" . $table . "` WHERE Key_name = '" . $key_name . "'");
               $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
               if ($num_results != 0) {
                 $pdo->query("ALTER TABLE `" . $table . "` DROP INDEX `" . $key_name . "`");
@@ -979,20 +1047,6 @@ function init_db_schema() {
       $pdo->query($create);
     }
 
-    // Create events to clean database
-    $events[] = 'DROP EVENT IF EXISTS clean_spamalias;
-DELIMITER //
-CREATE EVENT clean_spamalias 
-ON SCHEDULE EVERY 1 DAY DO 
-BEGIN
-  DELETE FROM spamalias WHERE validity < UNIX_TIMESTAMP();
-END;
-//
-DELIMITER ;';
-    foreach ($events as $event) {
-      $pdo->exec($event);
-    }
-
     // Inject admin if not exists
     $stmt = $pdo->query("SELECT NULL FROM `admin`"); 
     $num_results = count($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -1006,6 +1060,10 @@ DELIMITER ;';
     }
     // Insert new DB schema version
     $stmt = $pdo->query("REPLACE INTO `versions` (`application`, `version`) VALUES ('db_schema', '" . $db_version . "');"); 
+
+    // Fix dangling domain admins
+    $stmt = $pdo->query("DELETE FROM `admin` WHERE `superadmin` = 0 AND `username` NOT IN (SELECT `username`FROM `domain_admins`);");
+    $stmt = $pdo->query("DELETE FROM `da_acl` WHERE `username` NOT IN (SELECT `username`FROM `domain_admins`);");
 
     // Migrate attributes
     $stmt = $pdo->query("UPDATE `mailbox` SET `attributes` = '{}' WHERE `attributes` = '' OR `attributes` IS NULL;");
