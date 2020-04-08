@@ -25,7 +25,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         if (!empty($result)) {
         ?>
           <h4><?=$lang['edit']['alias'];?></h4>
-          <br />
+          <br>
           <form class="form-horizontal" data-id="editalias" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <input type="hidden" value="0" name="sogo_visible">
@@ -96,7 +96,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       if (!empty($result)) {
       ?>
       <h4><?=$lang['edit']['domain_admin'];?></h4>
-      <br />
+      <br>
       <form class="form-horizontal" data-id="editdomainadmin" role="form" method="post">
         <input type="hidden" value="0" name="active">
         <div class="form-group">
@@ -125,15 +125,15 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           </div>
         </div>
         <div class="form-group">
-          <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?></label>
+          <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
           <div class="col-sm-10">
-          <input type="password" data-hibp="true" class="form-control" name="password" placeholder="">
+          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
           </div>
         </div>
         <div class="form-group">
           <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
           <div class="col-sm-10">
-          <input type="password" class="form-control" name="password2">
+          <input type="password" data-pwgen-field="true" class="form-control" name="password2">
           </div>
         </div>
         <div class="form-group">
@@ -194,7 +194,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
       if (!empty($result)) {
       ?>
       <h4><?=$lang['edit']['domain_admin'];?></h4>
-      <br />
+      <br>
       <form class="form-horizontal" data-id="editadmin" role="form" method="post">
         <input type="hidden" value="0" name="active">
         <div class="form-group">
@@ -204,15 +204,15 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           </div>
         </div>
         <div class="form-group">
-          <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?></label>
+          <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
           <div class="col-sm-10">
-          <input type="password" data-hibp="true" class="form-control" name="password" placeholder="">
+          <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
           </div>
         </div>
         <div class="form-group">
           <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
           <div class="col-sm-10">
-          <input type="password" class="form-control" name="password2">
+          <input type="password" data-pwgen-field="true" class="form-control" name="password2">
           </div>
         </div>
         <div class="form-group">
@@ -258,6 +258,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <input type="hidden" value="0" name="backupmx">
             <input type="hidden" value="0" name="gal">
             <input type="hidden" value="0" name="relay_all_recipients">
+            <input type="hidden" value="0" name="relay_unknown_only">
             <div class="form-group">
               <label class="control-label col-sm-2" for="description"><?=$lang['edit']['description'];?></label>
               <div class="col-sm-10">
@@ -317,9 +318,13 @@ if (isset($_SESSION['mailcow_cc_role'])) {
               <div class="col-sm-10">
                 <div class="checkbox">
                   <label><input type="checkbox" value="1" name="backupmx" <?=(isset($result['backupmx_int']) && $result['backupmx_int']=="1") ? "checked" : null;?>> <?=$lang['edit']['relay_domain'];?></label>
-                  <br />
+                  <br>
                   <label><input type="checkbox" value="1" name="relay_all_recipients" <?=(isset($result['relay_all_recipients_int']) && $result['relay_all_recipients_int']=="1") ? "checked" : null;?>> <?=$lang['edit']['relay_all'];?></label>
                   <p><?=$lang['edit']['relay_all_info'];?></p>
+                  <label><input type="checkbox" value="1" name="relay_unknown_only" <?=(isset($result['relay_unknown_only_int']) && $result['relay_unknown_only_int']=="1") ? "checked" : null;?>> <?=$lang['edit']['relay_unknown_only'];?></label>
+                  <br>
+                  <p><?=$lang['edit']['relay_transport_info'];?></p>
+                  <hr style="margin:25px 0px 0px 0px">
                 </div>
               </div>
             </div>
@@ -576,7 +581,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="quota"><?=$lang['edit']['quota_mb'];?>
-              <br /><span id="quotaBadge" class="badge">max. <?=intval($result['max_new_quota'] / 1048576)?> MiB</span>
+              <br><span id="quotaBadge" class="badge">max. <?=intval($result['max_new_quota'] / 1048576)?> MiB</span>
             </label>
             <div class="col-sm-10">
               <input type="number" name="quota" style="width:100%" min="0" max="<?=intval($result['max_new_quota'] / 1048576);?>" value="<?=intval($result['quota']) / 1048576;?>" class="form-control">
@@ -680,15 +685,15 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             </div>
           </div>
           <div class="form-group">
-            <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?></label>
+            <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
             <div class="col-sm-10">
-            <input type="password" data-hibp="true" class="form-control" name="password" placeholder="<?=$lang['edit']['unchanged_if_empty'];?>">
+            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="<?=$lang['edit']['unchanged_if_empty'];?>">
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
             <div class="col-sm-10">
-            <input type="password" class="form-control" name="password2">
+            <input type="password" data-pwgen-field="true" class="form-control" name="password2">
             </div>
           </div>
           <div data-acl="<?=$_SESSION['acl']['extend_sender_acl'];?>" class="form-group">
@@ -709,7 +714,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="col-sm-offset-2 col-sm-10">
               <div class="checkbox">
               <label><input type="checkbox" value="1" name="force_pw_update" <?=($result['attributes']['force_pw_update']=="1") ? "checked" : null;?>> <?=$lang['edit']['force_pw_update'];?></label>
-              <small class="help-block"><?=$lang['edit']['force_pw_update_info'];?></small>
+              <small class="help-block"><?=sprintf($lang['edit']['force_pw_update_info'], $UI_TEXTS['main_name']);?></small>
               </div>
             </div>
           </div>
@@ -843,7 +848,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
             <div class="form-group">
               <label class="control-label col-sm-2" for="nexthop"><?=$lang['edit']['nexthop'];?></label>
               <div class="col-sm-10">
-                <input type="text" class="form-control" name="nexthop" value="<?=htmlspecialchars($result['nexthop'], ENT_QUOTES, 'UTF-8');?>" required>
+                <input type="text" class="form-control" name="nexthop" placeholder='[0.0.0.0], [0.0.0.0]:25, host:25, host, [host]:25' value="<?=htmlspecialchars($result['nexthop'], ENT_QUOTES, 'UTF-8');?>" required>
               </div>
             </div>
             <div class="form-group">
@@ -945,7 +950,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         if (!empty($result)) {
           ?>
           <h4><?=$lang['mailbox']['bcc_map'];?></h4>
-          <br />
+          <br>
           <form class="form-horizontal" data-id="editbcc" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <div class="form-group">
@@ -996,7 +1001,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         if (!empty($result)) {
           ?>
           <h4><?=$lang['mailbox']['recipient_map']?>: <?=$result['recipient_map_old'];?></h4>
-          <br />
+          <br>
           <form class="form-horizontal" data-id="edit_recipient_map" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <div class="form-group">
@@ -1042,7 +1047,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         if (!empty($result)) {
           ?>
           <h4><?=$lang['mailbox']['tls_policy_maps']?>: <?=$result['dest'];?></h4>
-          <br />
+          <br>
           <form class="form-horizontal" data-id="edit_tls_policy_maps" role="form" method="post">
             <input type="hidden" value="0" name="active">
             <div class="form-group">
@@ -1059,7 +1064,7 @@ if (isset($_SESSION['mailcow_cc_role'])) {
                 <option value="none" <?=($result['policy'] != 'none') ?: 'selected';?>>none</option>
                 <option value="may" <?=($result['policy'] != 'may') ?: 'selected';?>>may</option>
                 <option value="encrypt" <?=($result['policy'] != 'encrypt') ?: 'selected';?>>encrypt</option>
-                <option value="dane" <?=($result['policy'] != 'dane') ?: 'selected';?>>dane-only</option>
+                <option value="dane" <?=($result['policy'] != 'dane') ?: 'selected';?>>dane</option>
                 <option value="dane-only" <?=($result['policy'] != 'dane-only') ?: 'selected';?>>dane-only</option>
                 <option value="fingerprint" <?=($result['policy'] != 'fingerprint') ?: 'selected';?>>fingerprint</option>
                 <option value="verify" <?=($result['policy'] != 'verify') ?: 'selected';?>>verify</option>
@@ -1314,6 +1319,54 @@ if (isset($_SESSION['mailcow_cc_role'])) {
         <?php
         }
     }
+    elseif (isset($_GET['app-passwd']) &&
+      is_numeric($_GET['app-passwd'])) {
+        $id = $_GET["app-passwd"];
+        $result = app_passwd('details', $id);
+        if (!empty($result)) {
+        ?>
+          <h4><?=$lang['edit']['app_passwd'];?></h4>
+          <form class="form-horizontal" data-pwgen-length="32" data-id="editapp" role="form" method="post">
+            <input type="hidden" value="0" name="active">
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="app_name"><?=$lang['edit']['app_name'];?></label>
+              <div class="col-sm-10">
+              <input type="text" class="form-control" name="app_name" id="app_name" value="<?=htmlspecialchars($result['name'], ENT_QUOTES, 'UTF-8');?>" required maxlength="255">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="password"><?=$lang['edit']['password'];?> (<a href="#" class="generate_password"><?=$lang['edit']['generate'];?></a>)</label>
+              <div class="col-sm-10">
+              <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="password2"><?=$lang['edit']['password_repeat'];?></label>
+              <div class="col-sm-10">
+              <input type="password" data-pwgen-field="true" class="form-control" name="password2">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                <label><input type="checkbox" value="1" name="active" <?=($result['active_int']=="1") ? "checked" : "";?>> <?=$lang['edit']['active'];?></label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button class="btn btn-success" data-action="edit_selected" data-id="editapp" data-item="<?=htmlspecialchars($result['id']);?>" data-api-url='edit/app-passwd' data-api-attr='{}' href="#"><?=$lang['edit']['save'];?></button>
+              </div>
+            </div>
+          </form>
+        <?php
+        }
+        else {
+        ?>
+          <div class="alert alert-info" role="alert"><?=$lang['info']['no_action'];?></div>
+        <?php
+        }
+    }
   }
 }
 else {
@@ -1339,5 +1392,6 @@ echo "var pagination_size = '". $PAGINATION_SIZE . "';\n";
 </script>
 <?php
 $js_minifier->add('/web/js/site/edit.js');
+$js_minifier->add('/web/js/site/pwgen.js');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/footer.inc.php';
 ?>

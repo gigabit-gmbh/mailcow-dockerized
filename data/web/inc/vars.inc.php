@@ -80,7 +80,7 @@ $DETECT_LANGUAGE = true;
 $DEFAULT_LANG = 'en';
 
 // Available languages
-$AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'it', 'lv', 'nl', 'pl', 'pt', 'ru');
+$AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'it', 'lv', 'nl', 'pl', 'pt', 'ru', 'sk', 'sv');
 
 // Change theme (default: lumen)
 // Needs to be one of those: cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, readable, sandstone,
@@ -135,6 +135,8 @@ $ANONYMIZE_IPS = true;
 // OAuth2 settings
 $REFRESH_TOKEN_LIFETIME = 2678400;
 $ACCESS_TOKEN_LIFETIME = 86400;
+// Logout from mailcow after first OAuth2 session profile request
+$OAUTH2_FORGET_SESSION_AFTER_LOGIN = false;
 
 // MAILBOX_DEFAULT_ATTRIBUTES define default attributes for new mailboxes
 // These settings will not change existing mailboxes
@@ -158,15 +160,22 @@ $MAILBOX_DEFAULT_ATTRIBUTES['quarantine_notification'] = 'hourly';
 // Check dovecot.conf for further changes (e.g. shared namespace)
 $MAILBOX_DEFAULT_ATTRIBUTES['mailbox_format'] = 'maildir:';
 
+
+
 // Set visible Rspamd maps in mailcow UI, do not change unless you know what you are doing
 $RSPAMD_MAPS = array(
-  'Header-From: Blacklist' => 'global_mime_from_blacklist.map',
-  'Header-From: Whitelist' => 'global_mime_from_whitelist.map',
-  'Envelope Sender Blacklist' => 'global_smtp_from_blacklist.map',
-  'Envelope Sender Whitelist' => 'global_smtp_from_whitelist.map',
-  'Recipient Blacklist' => 'global_rcpt_blacklist.map',
-  'Recipient Whitelist' => 'global_rcpt_whitelist.map',
-  'Fishy TLDS (only fired in combination with bad words)' => 'fishy_tlds.map',
-  'Bad Words (only fired in combination with fishy TLDs)' => 'bad_words.map',
-  'Bad Words DE (only fired in combination with fishy TLDs)' => 'bad_words_de.map'
+  'regex' => array(
+    'Header-From: Blacklist' => 'global_mime_from_blacklist.map',
+    'Header-From: Whitelist' => 'global_mime_from_whitelist.map',
+    'Envelope Sender Blacklist' => 'global_smtp_from_blacklist.map',
+    'Envelope Sender Whitelist' => 'global_smtp_from_whitelist.map',
+    'Recipient Blacklist' => 'global_rcpt_blacklist.map',
+    'Recipient Whitelist' => 'global_rcpt_whitelist.map',
+    'Fishy TLDS (only fired in combination with bad words)' => 'fishy_tlds.map',
+    'Bad Words (only fired in combination with fishy TLDs)' => 'bad_words.map',
+    'Bad Words DE (only fired in combination with fishy TLDs)' => 'bad_words_de.map',
+    'Bad Languages' => 'bad_languages.map',
+    'Bulk Mail Headers' => 'bulk_header.map',
+    'Monitoring Hosts' => 'monitoring_nolog.map'
+  )
 );

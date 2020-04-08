@@ -33,6 +33,7 @@ RUN groupadd -g 5000 vmail \
   libdbi-perl \
   libdigest-hmac-perl \
   libdist-checkconflicts-perl \
+  libencode-imaputf7-perl \
   libfile-copy-recursive-perl \
   libfile-tail-perl \
   libhtml-parser-perl \
@@ -69,6 +70,7 @@ RUN groupadd -g 5000 vmail \
   libunicode-string-perl \
   liburi-perl \
   libwww-perl \
+  lua-sql-mysql \
   mariadb-client \
   procps \
   python3-pip \
@@ -100,6 +102,7 @@ RUN groupadd -g 5000 vmail \
 COPY trim_logs.sh /usr/local/bin/trim_logs.sh
 COPY clean_q_aged.sh /usr/local/bin/clean_q_aged.sh
 COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
+COPY syslog-ng-redis_slave.conf /etc/syslog-ng/syslog-ng-redis_slave.conf
 COPY imapsync /usr/local/bin/imapsync
 COPY postlogin.sh /usr/local/bin/postlogin.sh
 COPY imapsync_cron.pl /usr/local/bin/imapsync_cron.pl

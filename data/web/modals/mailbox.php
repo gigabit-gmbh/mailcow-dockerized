@@ -45,18 +45,19 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
             <div class="col-sm-10">
             <input type="text" class="form-control" name="quota" min="0" max="" id="addInputQuota" disabled value="<?=$lang['add']['select_domain'];?>" required>
             <small class="help-block">0 = ∞</small>
+            <div class="label label-warning addInputQuotaExhausted" style="display:none;"><?=$lang['warning']['quota_exceeded_scope'];?></div>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="password"><?=$lang['add']['password'];?> (<a href="#" class="generate_password"><?=$lang['add']['generate'];?></a>)</label>
             <div class="col-sm-10">
-            <input type="password" data-hibp="true" class="form-control" name="password" placeholder="" required>
+            <input type="password" data-pwgen-field="true" data-hibp="true" class="form-control" name="password" placeholder="" required>
             </div>
           </div>
           <div class="form-group">
             <label class="control-label col-sm-2" for="password2"><?=$lang['add']['password_repeat'];?></label>
             <div class="col-sm-10">
-            <input type="password" class="form-control" name="password2" placeholder="" required>
+            <input type="password" data-pwgen-field="true" class="form-control" name="password2" placeholder="" required>
             </div>
           </div>
           <div class="form-group">
@@ -95,7 +96,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="description"><?=$lang['add']['description'];?></label>
             <div class="col-sm-10">
-            <input type="text" class="form-control" name="description" required>
+            <input type="text" class="form-control" name="description">
             </div>
           </div>
           <div class="form-group">
@@ -162,10 +163,14 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
             <label class="control-label col-sm-2"><?=$lang['add']['backup_mx_options'];?></label>
             <div class="col-sm-10">
               <div class="checkbox">
-              <label><input type="checkbox" value="1" name="backupmx"> <?=$lang['add']['relay_domain'];?></label>
-              <br />
-              <label><input type="checkbox" value="1" name="relay_all_recipients"> <?=$lang['add']['relay_all'];?></label>
-              <p><?=$lang['add']['relay_all_info'];?></p>
+                <label><input type="checkbox" value="1" name="backupmx"> <?=$lang['add']['relay_domain'];?></label>
+                <br>
+                <label><input type="checkbox" value="1" name="relay_all_recipients"> <?=$lang['add']['relay_all'];?></label>
+                <p><?=$lang['add']['relay_all_info'];?></p>
+                <label><input type="checkbox" value="1" name="relay_unknown_only" <?=(isset($result['relay_unknown_only_int']) && $result['relay_unknown_only_int']=="1") ? "checked" : null;?>> <?=$lang['add']['relay_unknown_only'];?></label>
+                <br>
+                <p><?=$lang['add']['relay_transport_info'];?></p>
+                <hr style="margin:25px 0px 0px 0px">
               </div>
             </div>
           </div>
@@ -176,7 +181,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
               <button class="btn btn-default" data-action="add_item" data-id="add_domain" data-api-url='add/domain' data-api-attr='{"restart_sogo":"1"}' href="#"><?=$lang['add']['add_domain_restart'];?></button>
             </div>
           </div>
-          <p><span class="glyphicon glyphicon-exclamation-sign text-danger"></span> <?=$lang['add']['restart_sogo_hint'];?></p>
+          <p><span class="glyphicon glyphicon-exclamation-sign text-danger"></span> <?=$lang['add']['post_domain_add'];?></p>
         </form>
       </div>
     </div>
@@ -592,7 +597,7 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
           <div class="form-group">
             <label class="control-label col-sm-2" for="script_data">Script:</label>
             <div class="col-sm-10">
-              <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control textarea-code" rows="20" id="script_data" name="script_data" required></textarea>
+              <textarea autocorrect="off" spellcheck="false" autocapitalize="none" class="form-control textarea-code script_data" rows="20" name="script_data" required></textarea>
             </div>
           </div>
           <div class="form-group">
@@ -604,9 +609,9 @@ if (!isset($_SESSION['mailcow_cc_role'])) {
             </div>
           </div>
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10" id="add_filter_btns">
-              <button class="btn btn-default" id="validate_sieve" href="#"><?=$lang['add']['validate'];?></button>
-              <button class="btn btn-success" id="add_sieve_script" data-action="add_item" data-id="add_filter" data-api-url='add/filter' data-api-attr='{}' href="#" disabled><?=$lang['admin']['add'];?></button>
+            <div class="col-sm-offset-2 col-sm-10 add_filter_btns">
+              <button class="btn btn-default validate_sieve" href="#"><?=$lang['add']['validate'];?></button>
+              <button class="btn btn-success add_sieve_script" data-action="add_item" data-id="add_filter" data-api-url='add/filter' data-api-attr='{}' href="#" disabled><?=$lang['admin']['add'];?></button>
             </div>
           </div>
         </form>

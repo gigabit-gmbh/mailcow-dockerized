@@ -22,6 +22,7 @@ elseif (isset($_SESSION['mailcow_cc_role']) && $_SESSION['mailcow_cc_role'] == '
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/inc/header.inc.php';
 $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
+$_SESSION['index_query_string'] = $_SERVER['QUERY_STRING'];
 
 ?>
 <div class="container">
@@ -32,12 +33,19 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
         <div class="panel-body">
           <div class="text-center mailcow-logo"><img src="<?=($main_logo = customize('get', 'main_logo')) ? $main_logo : '/img/cow_mailcow.svg';?>" alt="mailcow"></div>
           <legend><?= isset($_SESSION['oauth2_request']) ? $lang['oauth2']['authorize_app'] : $UI_TEXTS['main_name'];?></legend>
+            <?php
+            if (strpos($_SESSION['index_query_string'], 'mobileconfig') !== false):
+            ?>
+            <div class="alert alert-info"><?= $lang['login']['mobileconfig_info']; ?></div>
+            <?php
+            endif;
+            ?>
             <form method="post" autofill="off">
             <div class="form-group">
               <label class="sr-only" for="login_user"><?= $lang['login']['username']; ?></label>
               <div class="input-group">
                 <div class="input-group-addon"><i class="glyphicon glyphicon-user"></i></div>
-                <input name="login_user" autocorrect="off" autocapitalize="none" type="text" id="login_user" class="form-control" placeholder="<?= $lang['login']['username']; ?>" required="" autofocus="">
+                <input name="login_user" autocorrect="off" autocapitalize="none" type="<?=(strpos($_SESSION['index_query_string'], 'mobileconfig') !== false) ? 'email' : 'text';?>" id="login_user" class="form-control" placeholder="<?= $lang['login']['username']; ?>" required="" autofocus="">
               </div>
             </div>
             <div class="form-group">
@@ -75,11 +83,11 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             endif;
             ?>
           <?php if(!isset($_SESSION['oauth2_request'])): ?>
-          <legend><?=$UI_TEXTS['apps_name'];?></legend>
+          <legend><span class="glyphicon glyphicon-link" aria-hidden="true"></span> <?=$UI_TEXTS['apps_name'];?></legend>
           <?php
           foreach ($MAILCOW_APPS as $app):
           ?>
-            <a href="<?= htmlspecialchars($app['link']); ?>" role="button" title="<?= htmlspecialchars($app['description']); ?>" class="btn btn-lg btn-default"><?= htmlspecialchars($app['name']); ?></a>&nbsp;
+            <a href="<?= htmlspecialchars($app['link']); ?>" role="button" style="margin-bottom:3pt" title="<?= htmlspecialchars($app['description']); ?>" class="btn btn-primary"><?= htmlspecialchars($app['name']); ?></a>&nbsp;
           <?php
           endforeach;
           $app_links = customize('get', 'app_links');
@@ -87,7 +95,7 @@ $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
             foreach ($app_links as $row) {
               foreach ($row as $key => $val):
             ?>
-              <a href="<?= htmlspecialchars($val); ?>" role="button" class="btn btn-lg btn-default"><?= htmlspecialchars($key); ?></a>&nbsp;
+              <a href="<?= htmlspecialchars($val); ?>" role="button" style="margin-bottom:3pt" class="btn btn-primary"><?= htmlspecialchars($key); ?></a>&nbsp;
             <?php 
               endforeach;
             }

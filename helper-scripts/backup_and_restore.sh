@@ -45,13 +45,28 @@ else
     exit 1
   fi
 fi
+
 BACKUP_LOCATION=$(echo ${BACKUP_LOCATION} | sed 's#/$##')
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 COMPOSE_FILE=${SCRIPT_DIR}/../docker-compose.yml
+
+if [ ! -f ${COMPOSE_FILE} ]; then
+  echo "Compose file not found"
+  exit 1
+fi
+
 echo "Using ${BACKUP_LOCATION} as backup/restore location."
 echo
+
 source ${SCRIPT_DIR}/../mailcow.conf
-CMPS_PRJ=$(echo $COMPOSE_PROJECT_NAME | tr -cd "[A-Za-z-_]")
+
+if [[ -z ${COMPOSE_PROJECT_NAME} ]]; then
+  echo "Could not determine compose project name"
+  exit 1
+else
+  echo "Found project name ${COMPOSE_PROJECT_NAME}"
+  CMPS_PRJ=$(echo ${COMPOSE_PROJECT_NAME} | tr -cd "[0-9A-Za-z-_]")
+fi
 
 function backup() {
   DATE=$(date +"%Y-%m-%d-%H-%M-%S")
@@ -93,12 +108,22 @@ function backup() {
       ;;&
     mysql|all)
       SQLIMAGE=$(grep -iEo '(mysql|mariadb)\:.+' ${COMPOSE_FILE})
-      docker run --rm \
-        --network $(docker network ls -qf name=${CMPS_PRJ}_) \
-        -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/var/lib/mysql/:ro \
-        --entrypoint= \
-        -v ${BACKUP_LOCATION}/mailcow-${DATE}:/backup \
-        ${SQLIMAGE} /bin/sh -c "mysqldump -hmysql -uroot -p${DBROOT} --all-databases | gzip > /backup/backup_mysql.gz"
+      if [[ -z "${SQLIMAGE}" ]]; then
+        echo "Could not determine SQL image version, skipping backup..."
+        shift
+        continue
+      else
+        echo "Using SQL image ${SQLIMAGE}, starting..."
+        docker run --rm \
+          --network $(docker network ls -qf name=${CMPS_PRJ}_) \
+          -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/var/lib/mysql/:ro \
+          --entrypoint= \
+          -v ${BACKUP_LOCATION}/mailcow-${DATE}:/backup \
+          ${SQLIMAGE} /bin/sh -c "mariabackup --host mysql --user root --password ${DBROOT} --backup --rsync --target-dir=/backup_mariadb ; \
+          mariabackup --prepare --target-dir=/backup_mariadb ; \
+          chown -R mysql:mysql /backup_mariadb ; \
+          /bin/tar --warning='no-file-ignored' --use-compress-program='gzip --rsyncable --best' -Pcvpf /backup/backup_mariadb.tar.gz /backup_mariadb ;"
+      fi
       ;;&
     --delete-days)
       shift
@@ -114,7 +139,10 @@ function backup() {
 }
 
 function restore() {
+  echo
+  echo "Stopping watchdog-mailcow..."
   docker stop $(docker ps -qf name=watchdog-mailcow)
+  echo
   RESTORE_LOCATION="${1}"
   shift
   while (( "$#" )); do
@@ -172,23 +200,71 @@ function restore() {
       ;;
     mysql)
       SQLIMAGE=$(grep -iEo '(mysql|mariadb)\:.+' ${COMPOSE_FILE})
-      docker stop $(docker ps -qf name=mysql-mailcow)
-      docker run \
-        -it --rm \
-        -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/var/lib/mysql/ \
-        --entrypoint= \
-        -u mysql \
-        -v ${RESTORE_LOCATION}:/backup \
-        ${SQLIMAGE} /bin/sh -c "mysqld --skip-grant-tables & \
-        until mysqladmin ping; do sleep 3; done && \
-        echo Restoring... && \
-        gunzip < backup/backup_mysql.gz | mysql -uroot && \
-        mysql -uroot -e SHUTDOWN;"
-      docker start $(docker ps -aqf name=mysql-mailcow)
+      if [[ -z "${SQLIMAGE}" ]]; then
+        echo "Could not determine SQL image version, skipping restore..."
+        shift
+        continue
+      elif [ ! -f "${RESTORE_LOCATION}/mailcow.conf" ]; then
+        echo "Could not find the corresponding mailcow.conf in ${RESTORE_LOCATION}, skipping restore."
+        echo "If you lost that file, copy the last working mailcow.conf file to ${RESTORE_LOCATION} and restart the restore process."
+        shift
+        continue
+      else
+        read -p "mailcow will be stopped and the currently active mailcow.conf will be modified to use the DB parameters found in ${RESTORE_LOCATION}/mailcow.conf - do you want to proceed? [Y|n] " MYSQL_STOP_MAILCOW
+        if [[ ${MYSQL_STOP_MAILCOW,,} =~ ^(no|n|N)$ ]]; then
+          echo "OK, skipped."
+          shift
+          continue
+        else
+          echo "Stopping mailcow..."
+          docker-compose down
+        fi
+        #docker stop $(docker ps -qf name=mysql-mailcow)
+        if [[ -d "${RESTORE_LOCATION}/mysql" ]]; then
+        docker run --rm \
+          -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/var/lib/mysql/:rw \
+          --entrypoint= \
+          -v ${RESTORE_LOCATION}/mysql:/backup \
+          ${SQLIMAGE} /bin/bash -c "shopt -s dotglob ; /bin/rm -rf /var/lib/mysql/* ; rsync -avh --usermap=root:mysql --groupmap=root:mysql /backup/ /var/lib/mysql/"
+        elif [[ -f "${RESTORE_LOCATION}/backup_mysql.gz" ]]; then
+        docker run \
+          -it --rm \
+          -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/var/lib/mysql/ \
+          --entrypoint= \
+          -u mysql \
+          -v ${RESTORE_LOCATION}:/backup \
+          ${SQLIMAGE} /bin/sh -c "mysqld --skip-grant-tables & \
+          until mysqladmin ping; do sleep 3; done && \
+          echo Restoring... && \
+          gunzip < backup/backup_mysql.gz | mysql -uroot && \
+          mysql -uroot -e SHUTDOWN;"
+        elif [[ -f "${RESTORE_LOCATION}/backup_mariadb.tar.gz" ]]; then
+        docker run --rm \
+          -v $(docker volume ls -qf name=${CMPS_PRJ}_mysql-vol-1):/backup_mariadb/:rw \
+          --entrypoint= \
+          -v ${RESTORE_LOCATION}:/backup \
+          ${SQLIMAGE} /bin/bash -c "shopt -s dotglob ; \
+            /bin/rm -rf /backup_mariadb/* ; \
+            /bin/tar -Pxvzf /backup/backup_mariadb.tar.gz ; \
+            rsync -avh --usermap=root:mysql --groupmap=root:mysql /backup/ /var/lib/mysql/ ;"
+        fi
+        echo "Modifying mailcow.conf..."
+        source ${RESTORE_LOCATION}/mailcow.conf
+        sed -i "/DBNAME/c\DBNAME=${DBNAME}" ${SCRIPT_DIR}/../mailcow.conf
+        sed -i "/DBUSER/c\DBUSER=${DBUSER}" ${SCRIPT_DIR}/../mailcow.conf
+        sed -i "/DBPASS/c\DBPASS=${DBPASS}" ${SCRIPT_DIR}/../mailcow.conf
+        sed -i "/DBROOT/c\DBROOT=${DBROOT}" ${SCRIPT_DIR}/../mailcow.conf
+        source ${SCRIPT_DIR}/../mailcow.conf
+        echo "Starting mailcow..."
+        docker-compose up -d
+        #docker start $(docker ps -aqf name=mysql-mailcow)
+      fi
       ;;
     esac
     shift
   done
+  echo
+  echo "Starting watchdog-mailcow..."
   docker start $(docker ps -aqf name=watchdog-mailcow)
 }
 
@@ -215,14 +291,14 @@ elif [[ ${1} == "restore" ]]; then
   echo
   declare -A FILE_SELECTION
   RESTORE_POINT="${FOLDER_SELECTION[${input_sel}]}"
-  if [[ -z $(find "${FOLDER_SELECTION[${input_sel}]}" -maxdepth 1 -type f -regex ".*\(redis\|rspamd\|mysql\|crypt\|vmail\|postfix\).*") ]]; then
+  if [[ -z $(find "${FOLDER_SELECTION[${input_sel}]}" -maxdepth 1 -type f,d -regex ".*\(redis\|rspamd\|mariadb\|mysql\|crypt\|vmail\|postfix\).*") ]]; then
     echo "No datasets found"
     exit 1
   fi
 
-  echo "[ 0 ] all"
-  # find all files in folder with .tar.gz extension, print their base names, remove backup_, remove .tar, remove .gz
-  FILE_SELECTION[0]=$(find "${FOLDER_SELECTION[${input_sel}]}" -type f -name "*.tar.gz" -printf "%f\n" | sed 's/backup_*//' | sed 's/\.[^.]*$//' | sed 's/\.[^.]*$//')
+  echo "[ 0 ] - all"
+  # find all files in folder with *.gz extension, print their base names, remove backup_, remove .tar (if present), remove .gz
+  FILE_SELECTION[0]=$(find "${FOLDER_SELECTION[${input_sel}]}" -maxdepth 1 -type f,d \( -name '*.gz' -o -name 'mysql' \) -printf '%f\n' | sed 's/backup_*//' | sed 's/\.[^.]*$//' | sed 's/\.[^.]*$//')
   for file in $(ls -f "${FOLDER_SELECTION[${input_sel}]}"); do
     if [[ ${file} =~ vmail ]]; then
       echo "[ ${i} ] - Mail directory (/var/vmail)"
@@ -244,7 +320,7 @@ elif [[ ${1} == "restore" ]]; then
       echo "[ ${i} ] - Postfix data"
       FILE_SELECTION[${i}]="postfix"
       ((i++))
-    elif [[ ${file} =~ mysql ]]; then
+    elif [[ ${file} =~ mysql ]] || [[ ${file} =~ mariadb ]]; then
       echo "[ ${i} ] - SQL DB"
       FILE_SELECTION[${i}]="mysql"
       ((i++))

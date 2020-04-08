@@ -381,7 +381,7 @@
         "select_domain": "Merci de d'abord sélectionner un domaine",
         "password": "Mot de passe",
         "password_repeat": "Confirmation du mot de passe (répéter)",
-        "restart_sogo_hint": "Vous devrez redémarrer le container du service SOGo après l'ajout d'un nouveau domaine !",
+        "post_domain_add": "Vous devrez redémarrer le container du service SOGo après l'ajout d'un nouveau domaine !",
         "goto_null": "Ignorer silencieusement le courriel"
     },
     "login": {
@@ -396,7 +396,7 @@
         "yubi_otp": "Authentification Yubico OTP",
         "key_id": "Un identifiant pour votre YubiKey",
         "key_id_totp": "Un identifiant pour votre clé",
-        "api_register": "mailcow utilise Yubico Cloud API. Merci d'obtenir un clé API pour votre clé <a href=\"https://upgrade.yubico.com/getapikey/\" target=\"_blank\">ici</a>",
+        "api_register": "%s utilise Yubico Cloud API. Merci d'obtenir un clé API pour votre clé <a href=\"https://upgrade.yubico.com/getapikey/\" target=\"_blank\">ici</a>",
         "u2f": "Authentification U2F",
         "totp": "Mot de passe à usage unique basé sur le temps (Google Authenticator etc.)",
         "none": "Désactivé",

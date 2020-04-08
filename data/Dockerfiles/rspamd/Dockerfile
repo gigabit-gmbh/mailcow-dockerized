@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
   && apt-key adv --fetch-keys https://rspamd.com/apt-stable/gpg.key \
   && echo "deb [arch=amd64] https://rspamd.com/apt-stable/ $CODENAME main" > /etc/apt/sources.list.d/rspamd.list \
   && apt-get update \
-  && apt-get --no-install-recommends -y install rspamd \
+  && apt-get --no-install-recommends -y install rspamd redis-tools \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get autoremove --purge \
   && apt-get clean \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
   && chown _rspamd:_rspamd /run/rspamd
 
 COPY settings.conf /etc/rspamd/settings.conf
+COPY neural.lua /usr/share/rspamd/plugins/neural.lua
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
