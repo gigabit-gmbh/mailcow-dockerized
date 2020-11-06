@@ -24,7 +24,14 @@ $(document).ready(function() {
     $(this).closest("form").find('[data-pwgen-field]').attr('type', 'text');
     $(this).closest("form").find('[data-pwgen-field]').val(random_passwd);
   });
-
+  function str_rot13(str) {
+    return (str + '').replace(/[a-z]/gi, function(s){
+      return String.fromCharCode(s.charCodeAt(0) + (s.toLowerCase() < 'n' ? 13 : -13))
+    })
+  }
+  $(".rot-enc").html(function(){
+    return str_rot13($(this).html())
+  });
   // https://stackoverflow.com/questions/4399005/implementing-jquerys-shake-effect-with-animate
   function shake(div,interval,distance,times) {
       if(typeof interval === 'undefined') {
@@ -138,6 +145,12 @@ $(document).ready(function() {
       $(this).removeAttr("data-action");
       $(this).click(function(event) {
         event.preventDefault();
+      });
+    }
+    if ($(this).is("select")) {
+      $(this).selectpicker('destroy');
+      $(this).replaceWith(function() { 
+        return '<label class="control-label"><b>' + this.innerText + '</b></label>'; 
       });
     }
     if ($(this).hasClass('btn-group')) {

@@ -37,10 +37,11 @@ $autodiscover_config = array(
   'displayShortName' => 'mail server',
   // General autodiscover service type: "activesync" or "imap"
   // emClient uses autodiscover, but does not support ActiveSync. mailcow excludes emClient from ActiveSync.
+  // With SOGo disabled, the type will always fallback to imap. CalDAV and CardDAV will be excluded, too.
   'autodiscoverType' => 'activesync',
   // If autodiscoverType => activesync, also use ActiveSync (EAS) for Outlook desktop clients (>= Outlook 2013 on Windows)
   // Outlook for Mac does not support ActiveSync
-  'useEASforOutlook' => 'yes',
+  'useEASforOutlook' => 'no',
   // Please don't use STARTTLS-enabled service ports in the "port" variable.
   // The autodiscover service will always point to SMTPS and IMAPS (TLS-wrapped services).
   // The autoconfig service will additionally announce the STARTTLS-enabled ports, specified in the "tlsport" variable.
@@ -80,7 +81,7 @@ $DETECT_LANGUAGE = true;
 $DEFAULT_LANG = 'en';
 
 // Available languages
-$AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'it', 'lv', 'nl', 'pl', 'pt', 'ru', 'sk', 'sv');
+$AVAILABLE_LANGUAGES = array('ca', 'cs', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'lv', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'zh');
 
 // Change theme (default: lumen)
 // Needs to be one of those: cerulean, cosmo, cyborg, darkly, flatly, journal, lumen, paper, readable, sandstone,
@@ -132,6 +133,9 @@ $DOCKER_TIMEOUT = 60;
 // Anonymize IPs logged via UI
 $ANONYMIZE_IPS = true;
 
+// Split DKIM key notation (bind format)
+$SPLIT_DKIM_255 = false;
+
 // OAuth2 settings
 $REFRESH_TOKEN_LIFETIME = 2678400;
 $ACCESS_TOKEN_LIFETIME = 86400;
@@ -156,10 +160,21 @@ $MAILBOX_DEFAULT_ATTRIBUTES['sogo_access'] = true;
 // Send notification when quarantine is not empty (never, hourly, daily, weekly)
 $MAILBOX_DEFAULT_ATTRIBUTES['quarantine_notification'] = 'hourly';
 
+// Mailbox has IMAP access by default
+$MAILBOX_DEFAULT_ATTRIBUTES['imap_access'] = true;
+
+// Mailbox has POP3 access by default
+$MAILBOX_DEFAULT_ATTRIBUTES['pop3_access'] = true;
+
+// Mailbox has SMTP access by default
+$MAILBOX_DEFAULT_ATTRIBUTES['smtp_access'] = true;
+
 // Default mailbox format, should not be changed unless you know exactly, what you do, keep the trailing ":"
 // Check dovecot.conf for further changes (e.g. shared namespace)
 $MAILBOX_DEFAULT_ATTRIBUTES['mailbox_format'] = 'maildir:';
 
+// Show last IMAP and POP3 logins
+$SHOW_LAST_LOGIN = true;
 
 
 // Set visible Rspamd maps in mailcow UI, do not change unless you know what you are doing

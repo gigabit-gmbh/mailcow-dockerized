@@ -4,6 +4,7 @@ $(document).ready(function() {
     var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
   }
+  function validateRegex(e){var t=e.split("/"),n=e,r="";t.length>1&&(n=t[1],r=t[2]);try{return new RegExp(n,r),!0}catch(e){return!1}}
   function is_active(elem) {
     if ($(elem).data('submitted') == '1') {
       return true;
@@ -106,8 +107,14 @@ $(document).ready(function() {
         if ($(this).prop('required')) {
           if (!$(this).val() && $(this).prop('disabled') === false) {
             invalid = true;
+            if ($(this).is("select")) {
+              $(this).selectpicker('setStyle', 'btn-input-missing', 'add');
+            }
             $(this).addClass('inputMissingAttr');
           } else {
+            if ($(this).is("select")) {
+              $(this).selectpicker('setStyle', 'btn-input-missing', 'remove');
+            }
             $(this).removeClass('inputMissingAttr');
           }
         }
@@ -132,6 +139,18 @@ $(document).ready(function() {
                 $(this).removeClass('inputMissingAttr');
               }
             }
+          }
+        }
+        if ($(this).val() && $(this).attr("regex")) {
+          var regex_content = $(this).val();
+          $(this).removeClass('inputMissingAttr');
+          if(!validateRegex(regex_content)) {
+            invalid = true;
+            $(this).addClass('inputMissingAttr');
+          }
+          if(!regex_content.startsWith('/') || !/\/[ims]?$/.test(regex_content)){
+            invalid = true;
+            $(this).addClass('inputMissingAttr');
           }
         }
       });
@@ -206,8 +225,14 @@ $(document).ready(function() {
         if ($(this).prop('required')) {
           if (!$(this).val() && $(this).prop('disabled') === false) {
             invalid = true;
+            if ($(this).is("select")) {
+              $(this).selectpicker('setStyle', 'btn-input-missing', 'add');
+            }
             $(this).addClass('inputMissingAttr');
           } else {
+            if ($(this).is("select")) {
+              $(this).selectpicker('setStyle', 'btn-input-missing', 'remove');
+            }
             $(this).removeClass('inputMissingAttr');
           }
         }

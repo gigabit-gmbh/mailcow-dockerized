@@ -27,6 +27,10 @@ while True:
 
 time_now = int(time.time())
 
+max_score = float(r.get('Q_MAX_SCORE') or "9999.0")
+if max_score == "":
+  max_score = 9999.0
+
 def query_mysql(query, headers = True, update = False):
   while True:
     try:
@@ -55,7 +59,7 @@ def query_mysql(query, headers = True, update = False):
     cnx.close()
 
 def notify_rcpt(rcpt, msg_count, quarantine_acl):
-  meta_query = query_mysql('SELECT SHA2(CONCAT(id, qid), 256) AS qhash, id, subject, score, sender, created FROM quarantine WHERE notified = 0 AND rcpt = "%s"' % (rcpt))
+  meta_query = query_mysql('SELECT SHA2(CONCAT(id, qid), 256) AS qhash, id, subject, score, sender, created, action FROM quarantine WHERE notified = 0 AND rcpt = "%s" AND score < %f' % (rcpt, max_score))
   if r.get('Q_HTML'):
     try:
       template = Template(r.get('Q_HTML'))
@@ -66,10 +70,11 @@ def notify_rcpt(rcpt, msg_count, quarantine_acl):
   else:
     with open('/templates/quarantine.tpl') as file_:
       template = Template(file_.read())
-  html = template.render(meta=meta_query, counter=msg_count, hostname=socket.gethostname(), quarantine_acl=quarantine_acl)
+  html = template.render(meta=meta_query, username=rcpt, counter=msg_count, hostname=socket.gethostname(), quarantine_acl=quarantine_acl)
   text = html2text.html2text(html)
   count = 0
   while count < 15:
+    count += 1
     try:
       server = smtplib.SMTP('postfix', 590, 'quarantine')
       server.ehlo()
@@ -85,11 +90,21 @@ def notify_rcpt(rcpt, msg_count, quarantine_acl):
       msg.attach(html_part)
       msg['To'] = str(rcpt)
       bcc = r.get('Q_BCC') or ""
+      redirect = r.get('Q_REDIRECT') or ""
       text = msg.as_string()
-      server.sendmail(msg['From'], [str(rcpt)] + [str(bcc)], text)
+      if bcc == '':
+        if redirect == '':
+          server.sendmail(msg['From'], str(rcpt), text)
+        else:
+          server.sendmail(msg['From'], str(redirect), text)
+      else:
+        if redirect == '':
+          server.sendmail(msg['From'], [str(rcpt)] + [str(bcc)], text)
+        else:
+          server.sendmail(msg['From'], [str(redirect)] + [str(bcc)], text)
       server.quit()
       for res in meta_query:
-        query_mysql('UPDATE quarantine SET notified = 1 WHERE id = "%d"' % (res['id']), update = True)
+       query_mysql('UPDATE quarantine SET notified = 1 WHERE id = "%d"' % (res['id']), update = True)
       r.hset('Q_LAST_NOTIFIED', record['rcpt'], time_now)
       break
     except Exception as ex:
@@ -97,7 +112,7 @@ def notify_rcpt(rcpt, msg_count, quarantine_acl):
       print('%s'  % (ex))
       time.sleep(3)
 
-records = query_mysql('SELECT IFNULL(user_acl.quarantine, 0) AS quarantine_acl, count(id) AS counter, rcpt FROM quarantine LEFT OUTER JOIN user_acl ON user_acl.username = rcpt WHERE notified = 0 AND rcpt in (SELECT username FROM mailbox) GROUP BY rcpt')
+records = query_mysql('SELECT IFNULL(user_acl.quarantine, 0) AS quarantine_acl, count(id) AS counter, rcpt FROM quarantine LEFT OUTER JOIN user_acl ON user_acl.username = rcpt WHERE notified = 0 AND score < %f AND rcpt in (SELECT username FROM mailbox) GROUP BY rcpt' % (max_score))
 
 for record in records:
   attrs = ''
@@ -123,13 +138,13 @@ for record in records:
     continue
   if attrs['quarantine_notification'] == 'hourly':
     if last_notification == 0 or (last_notification + 3600) < time_now:
-      print("Notifying %s about %d new items in quarantine" % (record['rcpt'], record['counter']))
+      print("Notifying %s: Considering %d new items in quarantine" % (record['rcpt'], record['counter']))
       notify_rcpt(record['rcpt'], record['counter'], record['quarantine_acl'])
   elif attrs['quarantine_notification'] == 'daily':
     if last_notification == 0 or (last_notification + 86400) < time_now:
-      print("Notifying %s about %d new items in quarantine" % (record['rcpt'], record['counter']))
+      print("Notifying %s: Considering %d new items in quarantine" % (record['rcpt'], record['counter']))
       notify_rcpt(record['rcpt'], record['counter'], record['quarantine_acl'])
   elif attrs['quarantine_notification'] == 'weekly':
     if last_notification == 0 or (last_notification + 604800) < time_now:
-      print("Notifying %s about %d new items in quarantine" % (record['rcpt'], record['counter']))
+      print("Notifying %s: Considering %d new items in quarantine" % (record['rcpt'], record['counter']))
       notify_rcpt(record['rcpt'], record['counter'], record['quarantine_acl'])
